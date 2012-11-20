@@ -1,0 +1,77 @@
+{
+    "filter": {
+        "name": "80s",
+        "slug": "80s",
+        "layers": [
+            {
+                "type": "adjustment",
+                "opacity": 100,
+                "blending_mode": "normal",
+                "mask_image": false,
+                "adjustment": {
+                    "type": "curves",
+                    "rgb": [[0,0],[128,153],[255,255]],
+                    "red": [[0,0],[128,152],[255,255]],
+                    "green": [[0,0],[128,115],[255,255]],
+                    "blue": [[0,0],[128,78],[255,255]]
+                }
+            },
+            {
+                "type": "adjustment",
+                "opacity": 100,
+                "blending_mode": "normal",
+                "mask_image": false,
+                "adjustment": {
+                    "type": "saturation",
+                    "amount": -40
+                }
+            },
+            {
+                "type": "adjustment",
+                "opacity": 100,
+                "blending_mode": "normal",
+                "mask_image": false,
+                "adjustment": {
+                    "type": "curves",
+                    "rgb": [[17,0],[104,114],[189,255]],
+                    "red": [[0,0],[255,255]],
+                    "green": [[0,0],[255,255]],
+                    "blue": [[0,0],[255,255]]
+                }
+            },
+            {
+                "type": "image",
+                "opacity": 100,
+                "blending_mode": "overlay",
+                "mask_image": false,
+                "image": {
+                    "image": "assets/80s-texture.png",
+                    "scale": true
+                }
+            },
+            {
+                "type": "color",
+                "opacity": 100,
+                "blending_mode": "divide",
+                "mask_image": false,
+                "color": {
+                    "rgb": [
+                        255,
+                        244,
+                        164
+                    ]
+                }
+            },            
+            {
+                "type": "image",
+                "opacity": 100,
+                "blending_mode": "multiply",
+                "mask_image": false,
+                "image": {
+                    "image": "assets/80s-frame.png",
+                    "scale": true
+                }
+            }
+        ]
+    }
+}

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="pr.sna.snaprkit"
+      android:versionCode="1"
+      android:versionName="1.0"> 
+    
+    <!-- SnaprKit: Minimum SDK version, required -->
+    <uses-sdk android:minSdkVersion="8" />
+    
+    <!-- SnaprKit: Permissions, required -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> 
+    <uses-permission android:name="android.permission.INTERNET"></uses-permission> 
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"></uses-permission> 
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"></uses-permission> 
+    <uses-permission android:name="android.permission.CAMERA"></uses-permission> 
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission> 
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" /> 
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <!-- 
+    	SnaprKit: Permissions for Aviary Feather integration, optional
+		Double-check with latest Aviary instructions
+     -->
+    <!--
+    <uses-permission android:name="android.permission.VIBRATE" />
+    -->
+    
+    <!-- SnaprKit: Hardware features used in the module, optional -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.screen.portrait"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.wifi"
+        android:required="false" />
+ 
+    <!-- You must define these entries in your manifest under the application tag -->
+    <application android:label="@string/snaprkit_name" > 
+        
+        <!-- SnaprKit: Activities, required -->
+        <activity android:name="pr.sna.snaprkit.WebViewExternalActivity"
+			android:screenOrientation="portrait" 
+			android:label="Browsing External Site"
+			android:configChanges="keyboardHidden|orientation"> 
+        </activity> 
+        <activity
+            android:name="pr.sna.snaprkit.SnaprImageEditFragmentActivity"
+            android:screenOrientation="portrait"
+            android:configChanges="keyboardHidden|orientation">
+        </activity>
+        <!-- SnaprKit: Activities for Aviary Feather integration, optional 
+             Double-check with latest Aviary instructions
+        -->
+        <!--
+        <activity
+			android:name="com.aviary.android.feather.FeatherActivity"
+			android:configChanges="orientation|keyboardHidden"
+			android:screenOrientation="unspecified"
+			android:hardwareAccelerated="true"
+			android:largeHeap="true"
+			android:theme="@style/FeatherTheme.Custom" />
+		-->
+        
+        <!-- SnaprKit: Services, required -->
+        <service
+            android:name="pr.sna.snaprkit.UploadService"> 
+        </service>
+        <service
+            android:name="pr.sna.snaprkit.GeolocationService"
+            android:process="android.process.snaprkit.geolocation"> 
+        </service>
+        
+        <!-- SnaprKit: Receiver for Aviary Feather integration, optional 
+             Double-check with latest Aviary instructions
+        -->
+        <!--        
+        <receiver
+			android:name="com.aviary.android.feather.receivers.FeatherSystemReceiver"
+			android:exported="true"
+			android:process=":feather_system_receiver" >
+			<intent-filter>
+				<action android:name="android.intent.action.PACKAGE_ADDED" />
+				<action android:name="android.intent.action.PACKAGE_REMOVED" />
+				<action android:name="android.intent.action.PACKAGE_REPLACED" />
+				<data android:scheme="package" />
+			</intent-filter>
+		</receiver>
+		--> 
+ 
+    </application> 
+</manifest>

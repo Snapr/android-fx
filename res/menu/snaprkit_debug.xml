@@ -1,0 +1,8 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/clearLogs"
+        android:title="Clear Logs" />
+    <item android:id="@+id/sendCurrentLog"
+        android:title="Send Current Session Log" />
+    <item android:id="@+id/sendPreviousLog"
+        android:title="Send Previous Session Log" />
+</menu>

@@ -1,0 +1,77 @@
+{
+    "filter": {
+        "name": "Walker",
+        "slug": "walker",
+        "layers": [
+            {
+                "type": "adjustment",
+                "opacity": 100,
+                "blending_mode": "normal",
+                "mask_image": false,
+                "adjustment": {
+                    "type": "curves",
+                    "rgb": [[8,0],[128,186],[207,254]],
+                    "red": [[0,0],[127,108],[255,255]],
+                    "green": [[0,0],[128,137],[255,255]],
+                    "blue": [[0,0],[129,118],[255,255]]
+                }
+            },
+            {
+                "type": "adjustment",
+                "opacity": 100,
+                "blending_mode": "normal",
+                "mask_image": false,
+                "adjustment": {
+                    "type": "saturation",
+                    "amount": -68,
+                    "hue" : 118
+                }
+            },
+            {
+                "type": "adjustment",
+                "opacity": 100,
+                "blending_mode": "normal",
+                "mask_image": false,
+                "adjustment": {
+                    "type": "curves",
+                    "rgb": [[0,17],[189,255]],
+                    "red": [],
+                    "green": [],
+                    "blue": []
+                }
+            },
+            {
+                "type": "image",
+                "opacity": 100,
+                "blending_mode": "multiply",
+                "mask_image": false,
+                "image": {
+                    "image": "assets/walker-noise.png",
+                    "scale": true
+                }
+            },
+            {
+                "type": "image",
+                "opacity": 100,
+                "blending_mode": "color",
+                "mask_image": false,
+                "image": {
+                    "image": "assets/walker-color.png",
+                    "scale": true
+                }
+            },
+            {
+                "type": "adjustment",
+                "opacity": 100,
+                "blending_mode": "normal",
+                "mask_image": "assets/walker-blur-mask.png",
+                "adjustment":
+                 {
+                    "type": "blur",
+                     "amount": 4
+                  }
+            }
+            
+        ]
+    }
+}

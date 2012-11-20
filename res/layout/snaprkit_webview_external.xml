@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/linearLayoutExternal"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:orientation="vertical" >
+
+	<WebView
+		android:id="@+id/snaprkit_webViewExternal"
+		android:layout_width="fill_parent"
+		android:layout_height="0dp"
+		android:layout_weight="1" />
+
+	<RelativeLayout
+		android:id="@+id/relativeLayoutBottomBar"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:orientation="vertical" >
+
+		<ImageView
+			android:id="@+id/imageViewBar"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:background="@drawable/snaprkit_bar"
+			android:contentDescription="@string/snaprkit_empty_content_description" />
+
+		<Button
+			android:id="@+id/buttonExit"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_centerInParent="true"
+			android:background="@drawable/snaprkit_btn_black"
+			android:text="@string/snaprkit_close"
+			android:textColor="#FFFFFF" >
+		</Button>
+	</RelativeLayout>
+
+</LinearLayout>

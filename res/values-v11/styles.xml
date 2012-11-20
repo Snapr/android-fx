@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+	<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+	 - application.theme
+	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+	<style name="Application.Theme" parent="@android:style/Theme.Holo">
+		<item name="android:buttonStyle">@style/Application.Theme.ButtonStyle</item>
+	</style>
+
+	<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+	 - application.theme.buttonstyle
+	 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+	<style name="Application.Theme.ButtonStyle" parent="@android:style/Widget.Holo.Button">
+		<item name="android:minHeight">0dip</item>
+        <item name="android:minWidth">0dip</item>
+	</style>
+
+</resources>

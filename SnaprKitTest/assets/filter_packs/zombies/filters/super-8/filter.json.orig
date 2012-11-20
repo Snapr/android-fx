@@ -1,0 +1,62 @@
+{
+    "filter": {
+        "name": "Super 8",
+        "slug": "super-8",
+        "layers": [
+            {
+                "type": "adjustment",
+                "opacity": 100,
+                "blending_mode": "normal",
+                "mask_image": "assets/super-8-blur-mask.png",
+                "adjustment":
+                 {
+                    "type": "blur",
+                     "amount": 4
+                  }
+            },
+            {
+                "type": "adjustment",
+                "opacity": 100,
+                "blending_mode": "normal",
+                "mask_image": false,
+                "adjustment": {
+                    "type": "saturation",
+                    "amount": -47
+                }
+            },
+            {
+                "type": "image",
+                "opacity": 100,
+                "blending_mode": "screen",
+                "mask_image": false,
+                "image": {
+                    "image": "assets/super8-burned-film.png",
+                    "scale": true
+                }
+            },
+            {
+                "type": "adjustment",
+                "opacity": 100,
+                "blending_mode": "normal",
+                "mask_image": false,
+                "adjustment": {
+                    "type": "curves",
+                    "rgb": [[20,0],[128,158],[235,255]],
+                    "red": [[0,0],[128,160],[255,255]],
+                    "green": [[0,0],[128,152],[255,255]],
+                    "blue": [[0,0],[129,108],[255,255]]
+                }
+            },            
+            {
+                "type": "image",
+                "opacity": 100,
+                "blending_mode": "multiply",
+                "mask_image": false,
+                "image": {
+                    "image": "assets/super8-frame.png",
+                    "scale": true
+                }
+            }
+        ]
+    }
+}

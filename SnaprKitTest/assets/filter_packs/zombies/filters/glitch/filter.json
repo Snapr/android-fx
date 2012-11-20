@@ -1,0 +1,28 @@
+{
+    "filter": {
+        "name": "Glitch",
+        "slug": "glitch",
+        "layers": [
+            {
+                "type": "image",
+                "opacity": 100,
+                "blending_mode": "color",
+                "mask_image": false,
+                "image": {
+                    "image": "assets/glitch-color.png",
+                    "scale": true
+                }
+            },
+            {
+                "type": "image",
+                "opacity": 100,
+                "blending_mode": "divide",
+                "mask_image": false,
+                "image": {
+                    "image": "assets/glitch-lines.png",
+                    "scale": true
+                }
+            }
+        ]
+    }
+}

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:paddingLeft="5dp"
+	android:paddingRight="5dp" >
+
+	<ImageView
+		android:id="@+id/effect_imageview"
+		android:layout_width="@dimen/thumbnail_size"
+		android:layout_height="@dimen/thumbnail_size"
+		android:layout_alignParentTop="true"
+		android:layout_centerHorizontal="true"
+		android:contentDescription="@string/snaprkit_empty_content_description"
+		android:padding="4dp"
+		android:scaleType="fitCenter" />
+
+	<ImageView
+		android:id="@+id/locked_overlay_imageview"
+		android:layout_width="@dimen/thumbnail_size"
+		android:layout_height="@dimen/thumbnail_size"
+		android:layout_alignParentTop="true"
+		android:layout_centerHorizontal="true"
+		android:contentDescription="@string/snaprkit_empty_content_description"
+		android:padding="4dp"
+		android:src="@drawable/snaprkit_locked_overlay"
+		android:visibility="gone" />
+
+	<TextView
+		android:id="@+id/effect_textview"
+		android:layout_width="@dimen/thumbnail_size"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/effect_imageview"
+		android:ellipsize="end"
+		android:gravity="center_horizontal"
+		android:maxLines="1"
+		android:singleLine="true"
+		android:textAppearance="?android:attr/textAppearanceSmall"
+		android:textColor="@android:color/white" />
+
+	<View
+		android:id="@+id/chosen_imageview"
+		android:layout_width="@dimen/thumbnail_size"
+		android:layout_height="@dimen/thumbnail_size"
+		android:layout_alignParentTop="true"
+		android:layout_centerHorizontal="true"
+		android:background="@drawable/snaprkit_img_thumbnail_overlay" />
+
+</RelativeLayout>

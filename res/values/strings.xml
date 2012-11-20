@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+	
+    <!-- Snapr App -->
+    <string name="snaprkit_name">Snapr</string>
+    <string name="snaprkit_location_error">Could not retrieve your location!</string>
+    <string name="snaprkit_finish">Finish</string>
+    <string name="snaprkit_empty_content_description"></string>
+    <string name="snaprkit_close">Close</string>
+    <string name="snaprkit_please_wait">Please wait</string>
+    
+    <!-- FX Module: Picker -->
+    <string name="snaprkit_app_name">SnaprImage</string>
+    <string name="snaprkit_pick_photo">Pick photo</string>
+    <string name="snaprkit_take_photo">Take photo</string>
+    <string name="snaprkit_cannot_write_to_sdcard">Cannot store photo. Please check storage.</string>
+    
+    <!-- FX Module: Editor -->
+    <string name="snaprkit_applying">Applying…</string>
+    <string name="snaprkit_saving_">Saving…</string>
+    <string name="snaprkit_problem_saving_check_storage">Problem saving. Please check device storage.</string>
+    <string name="snaprkit_problem_applying_effect">Problem applying effect. Sorry, we\'ll get that fixed.</string>
+    <string name="snaprkit_unable_to_load_image_try_another_">Unable to load image. Try another.</string>
+    <string name="snaprkit_loading">Loading…</string>
+    <string name="snaprkit_hold_on">HOLD ON</string>
+    <string name="snaprkit_loading_sticker_please_wait">Loading sticker. Please wait.</string>
+    <string name="snaprkit_save_photo_questionmark">Save photo?</string>
+    <string name="snaprkit_save">Save</string>
+    <string name="snaprkit_dont_save">Don\'t save</string>
+<!--     <string name="snaprkit_do_you_want_">Save photo?</string> -->
+    
+</resources>

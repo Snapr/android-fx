@@ -1,0 +1,65 @@
+{
+    "filter": {
+        "name": "Resident",
+        "slug": "resident",
+        "layers": [
+
+        {
+            "type": "adjustment",
+            "opacity": 100,
+            "blending_mode": "normal",
+            "mask_image": false,
+            "adjustment":
+            {
+                "type": "levels",
+                "black": 18,
+                "mid": 1.5,
+                "white": 228
+            }
+        },
+        {
+            "type": "adjustment",
+            "opacity": 100,
+            "blending_mode": "normal",
+            "mask_image": false,
+            "adjustment": {
+                "type": "saturation",
+                "amount": -59
+            }
+        },
+        {
+            "type": "image",
+            "opacity": 100,
+            "blending_mode": "multiply",
+            "mask_image": false,
+            "image": {
+                "image": "assets/resident-noise.png",
+                "scale": true
+            }
+        },
+        {
+            "type": "color",
+            "opacity": 24,
+            "blending_mode": "color",
+            "mask_image": false,
+            "color": {
+                "rgb": [
+                    133,
+                    164,
+                    61
+                ]
+            }
+        },
+        {
+            "type": "image",
+            "opacity": 100,
+            "blending_mode": "overlay",
+            "mask_image": false,
+            "image": {
+                "image": "assets/resident-vignette.png",
+                "scale": true
+            }
+        }
+        ]
+    }
+}

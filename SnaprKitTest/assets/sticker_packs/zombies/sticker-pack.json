@@ -1,0 +1,147 @@
+{
+    "sticker_pack": {
+        "name": "Zombies",
+        "slug": "zombies",
+        "description": "First round of Zombiegram stickers",
+        "stickers": [
+            {
+                "name": "Grin",
+                "slug": "zg-mouth",
+                "opacity": 100,
+                "blending_mode": "normal"
+            },
+            {
+                "name": "Jaw",
+                "slug": "zg-jaw",
+                "opacity": 100,
+                "blending_mode": "normal"
+            },
+            {
+                "name": "Lips",
+                "slug": "zg-lady_mouth",
+                "opacity": 100,
+                "blending_mode": "normal"
+            },
+            {
+                "name": "Eye L",
+                "slug": "zg-bleedingeye-left",
+                "opacity": 100,
+                "blending_mode": "multiply"
+            },
+            {
+                "name": "Eye R",
+                "slug": "zg-bleedingeye-right",
+                "opacity": 100,
+                "blending_mode": "multiply"
+            },
+            {
+                "name": "Eye Glow L",
+                "slug": "zg-brighteye-left",
+                "opacity": 90,
+                "blending_mode": "screen"
+            },
+            {
+                "name": "Eye Glow R",
+                "slug": "zg-brighteye-right",
+                "opacity": 90,
+                "blending_mode": "screen"
+            },
+            {
+                "name": "Eye Rash L",
+                "slug": "zg-eyerash-left",
+                "opacity": 70,
+                "blending_mode": "multiply"
+            },
+            {
+                "name": "Eye Rash R",
+                "slug": "zg-eyerash-right",
+                "opacity": 70,
+                "blending_mode": "multiply"
+            },
+            {
+                "name": "Guts",
+                "slug": "zg-guts",
+                "opacity": 100,
+                "blending_mode": "normal"
+            },
+            {
+                "name": "Burn",
+                "slug": "zg-burn",
+                "opacity": 100,
+                "blending_mode": "multiply"
+            },
+            {
+                "name": "Scab",
+                "slug": "zg-scab",
+                "opacity": 100,
+                "blending_mode": "multiply"
+            },
+            {
+                "name": "Axe",
+                "slug": "zg-axe",
+                "opacity": 100,
+                "blending_mode": "normal"
+            },
+            {
+                "name": "Gash",
+                "slug": "zg-gash",
+                "opacity": 100,
+                "blending_mode": "multiply"
+            },
+            {
+                "name": "Cut",
+                "slug": "zg-cut",
+                "opacity": 100,
+                "blending_mode": "multiply"
+            },
+            {
+                "name": "Wound",
+                "slug": "zg-wound",
+                "opacity": 100,
+                "blending_mode": "multiply"
+            },
+            {
+                "name": "Gore",
+                "slug": "zg-gore",
+                "opacity": 100,
+                "blending_mode": "multiply"
+            },
+            {
+                "name": "WTF",
+                "slug": "zg-brains",
+                "opacity": 100,
+                "blending_mode": "normal"
+            },
+            {
+                "name": "Bone",
+                "slug": "zg-bone",
+                "opacity": 100,
+                "blending_mode": "normal"
+            },
+            {
+                "name": "Blood",
+                "slug": "zg-blood_drips",
+                "opacity": 100,
+                "blending_mode": "multiply"
+            },
+            {
+                "name": "Splat",
+                "slug": "zg-blood_splat",
+                "opacity": 100,
+                "blending_mode": "multiply"
+            },
+            {
+                "name": "Arm L",
+                "slug": "zg-arm_left",
+                "opacity": 100,
+                "blending_mode": "normal"
+            },
+            {
+                "name": "Arm R",
+                "slug": "zg-arm_right",
+                "opacity": 100,
+                "blending_mode": "normal"
+            }
+        ]
+    }
+}

@@ -1,0 +1,52 @@
+{
+    "filter": {
+        "name": "Silent",
+        "slug": "silent",
+        "layers": [
+            {
+                "type": "adjustment",
+                "opacity": 100,
+                "blending_mode": "normal",
+                "mask_image": false,
+                "adjustment":
+                 {
+                    "type": "curves",
+                     "rgb":[[0, 0],[127, 155],[255, 255]],
+                     "red":[[0, 0],[128, 103],[255, 255]],
+                     "green":[[0, 0],[128, 156],[255, 255]],
+                     "blue":[[0, 0],[127, 151],[255, 255]]
+                 }
+            },
+            {
+                "type": "adjustment",
+                "opacity": 100,
+                "blending_mode": "normal",
+                "mask_image": false,
+                "adjustment": {
+                    "type": "saturation",
+                    "amount": -85
+                }
+            },
+            {
+                "type": "adjustment",
+                "opacity": 100,
+                "blending_mode": "normal",
+                "mask_image": false,
+                "adjustment": {
+                    "type": "hue",
+                    "amount": 36
+                }
+            },
+            {
+                "type": "image",
+                "opacity": 100,
+                "blending_mode": "screen",
+                "mask_image": false,
+                "image": {
+                    "image": "assets/silent-snow.png",
+                    "scale": true
+                }
+            }
+        ]
+    }
+}

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:orientation="vertical" >
+
+	<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+	<!-- image + message (top) -->
+	<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+	<RelativeLayout
+		android:layout_width="match_parent"
+		android:layout_height="0dp"
+		android:layout_weight="1"
+		android:padding="5dp" >
+
+		<ImageView
+			android:id="@+id/edited_image"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:adjustViewBounds="true"
+			android:contentDescription="@string/snaprkit_empty_content_description"
+			android:scaleType="fitCenter" />
+
+		<pr.sna.snaprkit.tabletop.TabletopSurfaceView
+			android:id="@+id/tabletop"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent" />
+
+		<LinearLayout
+			android:id="@+id/message_layout"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:layout_margin="@dimen/message_container_margin"
+			android:background="@drawable/snaprkit_msg_circle"
+			android:gravity="center"
+			android:orientation="vertical"
+			android:padding="@dimen/message_container_padding"
+			android:visibility="invisible" >
+
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text="@string/snaprkit_hold_on"
+				android:textColor="@android:color/white"
+				android:textSize="@dimen/message_title_text_size"
+				android:textStyle="bold" />
+
+			<TextView
+				android:id="@+id/message_textview"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:gravity="center_horizontal"
+				android:textColor="@android:color/white"
+				android:textSize="@dimen/message_text_size"
+				android:textStyle="bold" />
+		</LinearLayout>
+	</RelativeLayout>
+
+	<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+	<!-- filter + sticker containers (middle) -->
+	<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+	<RelativeLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content" >
+
+		<HorizontalScrollView
+			android:id="@+id/filter_container_root"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content" >
+
+			<LinearLayout
+				android:id="@+id/filter_container"
+				android:layout_width="wrap_content"
+				android:layout_height="match_parent"
+				android:paddingBottom="5dip"
+				android:paddingTop="5dip" />
+		</HorizontalScrollView>
+
+		<HorizontalScrollView
+			android:id="@+id/sticker_container_root"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content" >
+
+			<LinearLayout
+				android:id="@+id/sticker_container"
+				android:layout_width="wrap_content"
+				android:layout_height="match_parent"
+				android:paddingBottom="5dip"
+				android:paddingTop="5dip" />
+		</HorizontalScrollView>
+	</RelativeLayout>
+
+	<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+	<!-- footer (bottom; cancel, stickers, filters, next) -->
+	<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:background="@drawable/snaprkit_bg_footer_tile"
+		android:gravity="center_vertical"
+		android:orientation="horizontal"
+		android:padding="10dp" >
+
+		<Button
+			android:id="@+id/cancel_button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:background="@drawable/snaprkit_btn_cross"
+			android:contentDescription="@string/snaprkit_empty_content_description" />
+
+		<View
+			android:layout_width="0dp"
+			android:layout_height="0dp"
+			android:layout_weight="1" />
+
+		<Button
+			android:id="@+id/sticker_button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:background="@drawable/snaprkit_btn_sticker"
+			android:contentDescription="@string/snaprkit_empty_content_description" />
+
+		<View
+			android:layout_width="10dp"
+			android:layout_height="0dp" />
+
+		<Button
+			android:id="@+id/filter_button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:background="@drawable/snaprkit_btn_filter"
+			android:contentDescription="@string/snaprkit_empty_content_description" />
+
+		<View
+			android:layout_width="0dp"
+			android:layout_height="0dp"
+			android:layout_weight="1" />
+
+		<Button
+			android:id="@+id/next_button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:background="@drawable/snaprkit_btn_tick"
+			android:contentDescription="@string/snaprkit_empty_content_description" />
+	</LinearLayout>
+
+</LinearLayout>
