@@ -11,12 +11,15 @@ public class CompositeEffect {
 
 	/** alpha [0,1] */
 	public static native void applyImageEffect(Bitmap source, Bitmap overlay, float alpha, int blendMode);
-	
+
+	public static native void applyImageMaskEffect(Bitmap source, Bitmap overlay, Bitmap mask, float alpha, int blendMode);
+
 	/** alpha [0,1] */
 	public static native void applyAlphaEffect(Bitmap source, Bitmap overlay, float alpha, int blendMode);
 	
 	/** alpha [0,1] */
 	public static native void applyColorEffect(Bitmap source, int colour, float alpha, int blendMode);
+
 
 	public static final int BLEND_MODE_NORMAL = 0;
 	public static final int BLEND_MODE_MULTIPLY = 1;

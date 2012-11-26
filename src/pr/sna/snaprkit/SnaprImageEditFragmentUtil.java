@@ -28,6 +28,7 @@ import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.FloatMath;
 import android.view.WindowManager;
@@ -38,7 +39,7 @@ public class SnaprImageEditFragmentUtil {
 	 * constants
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
-	public static final File TEMP_IMAGE_DIR = new File(".snapr", "images");
+	public static final File TEMP_IMAGE_DIR = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + ".snapr", "images");
 	public static final String ORIGINAL_IMAGE_FILENAME = "original.jpg";
 	public static final String ORIGINAL_STICKERS_IMAGE_FILENAME = "original_stickers.jpg";
 	
@@ -132,7 +133,7 @@ public class SnaprImageEditFragmentUtil {
 	}
 	
 	public static boolean saveImage(Bitmap bitmap, File file) {
-		if (!file.getParentFile().mkdirs()) return false; // make sure the parent directory exists
+		if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) return false; // make sure the parent directory exists
 		FileOutputStream fos;
 
 		try {
@@ -295,7 +296,7 @@ public class SnaprImageEditFragmentUtil {
 		}
 
 		bitmap = SnaprPhotoHelper.cropBitmap(bitmap);
-		saveTempImage(bitmap);
+		if (!saveTempImage(bitmap)) return null;
 
 		return bitmap;
 	}

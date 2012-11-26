@@ -217,24 +217,37 @@ public abstract class SnaprFilterUtil {
 	public static abstract class Layer {
 		protected int mOpacity;
 		protected BlendingMode mBlendingMode;
-		protected boolean mMaskImage;
-
+		protected String mMaskImage;
+		protected String mImageFolder;
+		
 		private static Layer parse(Context context, String folder, JSONObject json) throws JSONException, IOException {
 			String type = json.getString("type");
-			if (type.equals("adjustment")) return AdjustmentLayer.parse(json).fill(json);
-			if (type.equals("color")) return ColorLayer.parse(json).fill(json);
-			if (type.equals("image")) return ImageLayer.parse(context, folder, json).fill(json);
+			if (type.equals("adjustment")) return AdjustmentLayer.parse(json).fill(json, folder);
+			if (type.equals("color")) return ColorLayer.parse(json).fill(json, folder);
+			if (type.equals("image")) return ImageLayer.parse(context, json).fill(json, folder);
 			throw new IllegalArgumentException();
 		}
 
-		/* internal */ Layer fill(JSONObject json) throws JSONException {
+		/* internal */ Layer fill(JSONObject json, String folder) throws JSONException {
 			mOpacity = json.getInt("opacity");
 			mBlendingMode = BlendingMode.getBlendingMode(json.getString("blending_mode"));
-			mMaskImage = json.getBoolean("mask_image");
+			String maskImage = json.has("mask_image") ? json.getString("mask_image") : null;
+			mMaskImage = maskImage == null ? null : maskImage.equals("false") || maskImage.equals("true") ? null : maskImage;
+			mImageFolder = folder;
 			return this;
 		}
 
-		public abstract void apply(Context context, Bitmap bitmap) throws IOException;
+		public void apply(Context context, Bitmap bitmap) throws IOException {
+			applyInner(context, bitmap);
+			if (mMaskImage == null) return;
+			Bitmap image = JsonUtil.loadLargerAssetBitmap(context, mImageFolder, mMaskImage, bitmap.getWidth(), bitmap.getHeight());
+			Bitmap image2 = SnaprPhotoHelper.getResizedBitmap(image, bitmap.getHeight(), bitmap.getHeight(), true);
+			CompositeEffect.applyImageEffect(bitmap, image2, 1.0f, BlendingMode.MULTIPLY.mCompositeBlendMode);
+			image2.recycle();
+			System.gc();
+		}
+		
+		public abstract void applyInner(Context context, Bitmap bitmap) throws IOException;
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -250,7 +263,7 @@ public abstract class SnaprFilterUtil {
 			return layer;
 		}
 
-		@Override public void apply(Context context, Bitmap bitmap) {
+		@Override public void applyInner(Context context, Bitmap bitmap) {
 			mAdjustment.apply(context, bitmap);
 		}
 	}
@@ -268,7 +281,7 @@ public abstract class SnaprFilterUtil {
 			return layer;
 		}
 
-		@Override public void apply(Context context, Bitmap bitmap) {
+		@Override public void applyInner(Context context, Bitmap bitmap) {
 			if (DEBUG) Log.i(LOG_TAG, "applying composite effect: " + mColor + " " + mOpacity / 100f + " " + mBlendingMode.mCompositeBlendMode);
 			CompositeEffect.applyColorEffect(bitmap, mColor, mOpacity / 100f, mBlendingMode.mCompositeBlendMode);
 		}
@@ -279,16 +292,14 @@ public abstract class SnaprFilterUtil {
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 	public static final class ImageLayer extends Layer {
-		protected String mImageFolder;
 		protected String mImage;
 		protected boolean mScale;
 		protected int mTop;
 		protected int mLeft;
 
-		private static ImageLayer parse(Context context, String folder, JSONObject json) throws JSONException, IOException {
+		private static ImageLayer parse(Context context, JSONObject json) throws JSONException, IOException {
 			ImageLayer layer = new ImageLayer();
 			json = json.getJSONObject("image");
-			layer.mImageFolder = folder;
 			layer.mImage = json.getString("image");
 			layer.mScale = json.getBoolean("scale");
 			layer.mTop = json.has("top") ? json.getInt("top") : 0;
@@ -296,13 +307,14 @@ public abstract class SnaprFilterUtil {
 			return layer;
 		}
 
-		@Override public void apply(Context context, Bitmap bitmap) throws IOException {
-			Bitmap image = JsonUtil.loadAssetBitmap(context, mImageFolder, mImage);
-			Bitmap image2 = SnaprPhotoHelper.getResizedBitmap(image, bitmap.getHeight(), bitmap.getHeight());
-			image.recycle();
+		@Override public void applyInner(Context context, Bitmap bitmap) throws IOException {
 			if (DEBUG) Log.i(LOG_TAG, "applying image effect: " + mOpacity / 100f + " " + mBlendingMode.mCompositeBlendMode);
+			
+			Bitmap image = JsonUtil.loadLargerAssetBitmap(context, mImageFolder, mImage, bitmap.getWidth(), bitmap.getHeight());
+			Bitmap image2 = SnaprPhotoHelper.getResizedBitmap(image, bitmap.getHeight(), bitmap.getHeight(), true);
 			CompositeEffect.applyImageEffect(bitmap, image2, mOpacity / 100f, mBlendingMode.mCompositeBlendMode);
 			image2.recycle();
+			System.gc();
 		}
 	}
 
@@ -365,15 +377,13 @@ public abstract class SnaprFilterUtil {
 		protected double[] mBlueCo;
 
 		private static CurvesAdjustment parse(JSONObject json) throws JSONException {
-
 			CurvesAdjustment a = new CurvesAdjustment();
 			a.mRGB = JsonUtil.flattenIntArray(json, "rgb");
 			a.mRed = JsonUtil.flattenIntArray(json, "red");
 			a.mGreen = JsonUtil.flattenIntArray(json, "green");
 			a.mBlue = JsonUtil.flattenIntArray(json, "blue");
 
-			if(DEBUG)
-				Log.i(LOG_TAG,json.toString());
+			if (DEBUG) Log.i(LOG_TAG,json.toString());
 
 			double[] mRGBX;
 			double[] mRedX;

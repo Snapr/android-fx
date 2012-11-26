@@ -145,4 +145,14 @@ public class JSAImageUtil {
 		}
 	}
 
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * load image stream (options)
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	/** Get the dimensions of an image saved as a file using the bitmap bounds. Return null if no information is available. */
+	public static Bitmap loadImageStream(InputStream stream, Options options) {
+		if (stream == null) throw new IllegalArgumentException();
+		return BitmapFactory.decodeStream(stream, null, options);
+	}
+
 }

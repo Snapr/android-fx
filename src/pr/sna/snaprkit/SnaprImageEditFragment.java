@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import nz.co.juliusspencer.android.JSAObjectUtil;
 import nz.co.juliusspencer.android.JSATimeUtil;
 import nz.co.juliusspencer.android.JSATuple;
 import pr.sna.snaprkit.SnaprFilterUtil.Filter;
@@ -13,7 +14,7 @@ import pr.sna.snaprkit.SnaprFilterUtil.OnImageLoadListener;
 import pr.sna.snaprkit.SnaprStickerUtil.Sticker;
 import pr.sna.snaprkit.SnaprStickerUtil.StickerPack;
 import pr.sna.snaprkit.tabletop.TabletopSurfaceView;
-import pr.sna.snaprkit.tabletop.TabletopSurfaceView.OnNonInteractionListener;
+import pr.sna.snaprkit.tabletop.TabletopSurfaceView.TabletopListener;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.MediaScannerConnection;
@@ -31,7 +32,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class SnaprImageEditFragment extends Fragment implements OnNonInteractionListener {
+public class SnaprImageEditFragment extends Fragment implements TabletopListener {
 	private FragmentListener mFragmentListener;
 
 	private final List<SnaprEffect> mEffects = new ArrayList<SnaprEffect>();
@@ -40,9 +41,12 @@ public class SnaprImageEditFragment extends Fragment implements OnNonInteraction
 	private File mOriginalFile;					// the location of the original, unscaled image
 	private File mSaveFile;						// the location to save the modified image to
 	
-	private Bitmap mOriginalBitmap;							// the original, scaled bitmap
-	private Bitmap mComposedBitmap;							// the original, scaled bitmap (possibly with stickers and effects applied)
+	private Bitmap mBaseBitmap;								// the original, scaled bitmap (possibly with an effect applied)
+	private Bitmap mComposedBitmap;							// the original, scaled bitmap (possibly with stickers and an effect applied)
 	private ComposeBitmapAsyncTask mComposeBitmapAsyncTask;	// the currently running compose bitmap task
+	
+	private SnaprEffect mBaseBitmapEffect;					// the effect currently applied to the base bitmap
+	private int mComposedBitmapInteractionCount;			// the interaction count of the tabletop when the composed bitmap was created
 	
 	private SnaprEffect mAppliedEffect;
 	private InteractionState mInteractionState = InteractionState.SHOWING_STICKERS;	// the current state of the fragment interaction
@@ -199,8 +203,8 @@ public class SnaprImageEditFragment extends Fragment implements OnNonInteraction
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
 	private void onOriginalBitmapAvailable(String originalFilepath, long photoTimestamp) {
-		mOriginalBitmap = SnaprImageEditFragmentUtil.saveOriginalTempImage(getActivity(), originalFilepath, photoTimestamp);
-		if (mOriginalBitmap == null) {
+		mBaseBitmap = SnaprImageEditFragmentUtil.saveOriginalTempImage(getActivity(), originalFilepath, photoTimestamp);
+		if (mBaseBitmap == null) {
 			Toast.makeText(getActivity(), R.string.snaprkit_unable_to_load_image_try_another_, Toast.LENGTH_SHORT).show();
 			mFragmentListener.onCancel();		
 		} else {
@@ -227,6 +231,7 @@ public class SnaprImageEditFragment extends Fragment implements OnNonInteraction
 	}
 	
 	private void initialiseEffectViews() {
+		if (!isAdded() || !mViewsInitialised) return;
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 		
 		// create the thumbnail views for each effect
@@ -364,8 +369,13 @@ public class SnaprImageEditFragment extends Fragment implements OnNonInteraction
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
 	private void updateViewEditedImageView() {
-		boolean stickers = mInteractionState.equals(InteractionState.SHOWING_STICKERS);
-		mEditedImageView.setImageBitmap(stickers ? mOriginalBitmap : mComposedBitmap != null ? mComposedBitmap : mOriginalBitmap);
+		boolean isShowingStickers = mInteractionState.equals(InteractionState.SHOWING_STICKERS);
+		boolean isStickerUpToDate = mComposedBitmapInteractionCount == mTabletop.getInteractionCount();
+		boolean isBaseBitmapEffectApplied = mBaseBitmapEffect != null && !mEffects.get(0).equals(mBaseBitmapEffect);
+		boolean preferComposed = !isShowingStickers || (isBaseBitmapEffectApplied && isStickerUpToDate);
+		boolean showComposed = preferComposed && mComposedBitmap != null && mComposedBitmap != mBaseBitmap;
+		mEditedImageView.setImageBitmap(showComposed ? mComposedBitmap : mBaseBitmap);
+		mTabletop.setDrawGraphics(!showComposed);
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -421,8 +431,12 @@ public class SnaprImageEditFragment extends Fragment implements OnNonInteraction
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	 * on non interaction
+	 * tabletop listener
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	@Override public void onInteraction(int interactionCount) {
+		updateViewEditedImageView();
+	}
 	
 	@Override public void onNonInteraction(int interactionCount) {
 		composeBitmap(false);
@@ -459,9 +473,24 @@ public class SnaprImageEditFragment extends Fragment implements OnNonInteraction
 		@Override protected Bitmap doInBackground(Void... params) {
 			synchronized (SnaprImageEditFragment.this) { // synchronise to prevent two tasks running concurrently
 				try {
-					Bitmap bitmap = mOriginalBitmap.copy(SnaprImageEditFragmentUtil.PREFERRED_BITMAP_CONFIG, true);
+					
+					// load the bitmap from the temporarily saved, resized bitmap
+					Bitmap bitmap = SnaprImageEditFragmentUtil.loadTempImage();
 					if (isCancelled()) return null;
+					
+					// generate the base bitmap by applying the effect (if required)
+					if (!JSAObjectUtil.equals(mAppliedEffect, mBaseBitmapEffect)) {
+						mBaseBitmap = bitmap;
+						mBaseBitmapEffect = mAppliedEffect;
+						if (mAppliedEffect != null) mAppliedEffect.getFilter().apply(mContext, mBaseBitmap);
+						if (mTabletop.getGraphicCount() == 0) return mBaseBitmap;
+						bitmap = SnaprImageEditFragmentUtil.loadTempImage();
+						if (isCancelled()) return null;
+					}
+					
+					// draw the stickers and apply the effect
 					bitmap = mTabletop.drawOnBitmap(bitmap);
+					mComposedBitmapInteractionCount = mTabletop.getInteractionCount();
 					if (isCancelled()) return null;
 					if (mAppliedEffect != null) mAppliedEffect.getFilter().apply(mContext, bitmap);
 					if (isCancelled()) return null;
@@ -496,7 +525,7 @@ public class SnaprImageEditFragment extends Fragment implements OnNonInteraction
 		@Override protected void onPreExecute() {
 			super.onPreExecute();
 			mFragmentListener.onShowProgressBlocking(getString(R.string.snaprkit_saving_));
-			mOriginalBitmap = null; // null bitmaps to release unused memory
+			mBaseBitmap = null; // null bitmaps to release unused memory
 			mComposedBitmap = null;
 			updateViewEditedImageView();
 			mTabletop.setVisibility(View.GONE);
@@ -549,7 +578,7 @@ public class SnaprImageEditFragment extends Fragment implements OnNonInteraction
 				initialiseStickerViews();
 			}
 
-			new LoadStickerFilterImagesAsyncTask(getActivity()).execute();
+			if (isAdded()) new LoadStickerFilterImagesAsyncTask(getActivity()).execute();
 			
 			updateView();
 		}

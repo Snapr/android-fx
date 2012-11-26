@@ -56,7 +56,7 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	
 	private int mInteractionCount;											// the number of times the user has interacted with the surface
 	private Runnable mNonInteractionRunnable;								// the runnable used to track non-interaction timeouts
-	private OnNonInteractionListener mOnNonInteractionListener;				// the listener notified when the user is no longer interacting
+	private TabletopListener mTabletopListener;								// the listener notified when the user is no longer interacting
 	private long mNonInteractionTimeout = DEFAULT_NON_INTERACTION_TIMEOUT;	// the length of time after the last user interaction to dispatch an event
 	
 	private int mMaxGraphicCount = DEFAULT_MAX_GRAPHIC_COUNT;				// the maximum number of graphics permitted to be added
@@ -64,6 +64,7 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	private final Handler mUiThreadHandler = new Handler();					// handler for the ui thread
 	
 	private boolean mAutoPinGraphics;				// whether or not only the most recently interacted graphic should be active (all others pinned)
+	private boolean mDrawGraphics;					// whether or not to draw graphics on the tabletop (during the update loop)
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * constants
@@ -138,6 +139,14 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * graphic count
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	public int getGraphicCount() {
+		return mBackgroundGraphics.size() + mForegroundGraphics.size();
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * interaction count
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
@@ -149,8 +158,8 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	 * non interaction listener
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
-	public void setOnNonInteractionListener(OnNonInteractionListener listener) {
-		mOnNonInteractionListener = listener;
+	public void setOnNonInteractionListener(TabletopListener listener) {
+		mTabletopListener = listener;
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -245,6 +254,7 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 			TabletopGraphic graphic = mForegroundGraphics.get(i);
 			if (!graphic.onTouchEvent(event)) continue;
 			setActiveGraphic(graphic, pointerId);
+			registerInteraction();
 			return true;
 		}
 		
@@ -253,6 +263,7 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 			TabletopGraphic graphic = mBackgroundGraphics.get(i);
 			if (!graphic.onTouchEvent(event)) continue;
 			setActiveGraphic(graphic, pointerId);
+			registerInteraction();
 			return true;
 		}
 		
@@ -264,11 +275,12 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		
 		// create and add a new graphic to the surface
 		PointF center = new PointF(event.getX(pointerIndex), event.getY(pointerIndex));
-		TabletopGraphic graphic = addGraphic(mTouchBitmap, center);
+		TabletopGraphic graphic = addGraphic(mTouchBitmap, center, false);
 		
 		// set the newly added graphic as the active graphic (if possible)
 		boolean handle = graphic.onTouchEvent(event);
 		if (handle) setActiveGraphic(graphic, pointerId);
+		if (handle) registerInteraction();
 		return true;
 	}
 	
@@ -290,7 +302,6 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	private synchronized boolean onTouchEventActionUp(MotionEvent event) {
 		if (mActiveGraphic == null) return true;
 		mActiveGraphic.onTouchEvent(event);
-		mInteractionCount = mInteractionCount + 1;
 		TabletopGraphic.State state = mActiveGraphic.getState();
 		startNonInteractionTimeout();
 		
@@ -309,6 +320,16 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * register interaction
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	private void registerInteraction() {
+		mInteractionCount = mInteractionCount + 1;
+		if (mTabletopListener != null) mTabletopListener.onInteraction(mInteractionCount);
+		if (mNonInteractionRunnable != null) mUiThreadHandler.removeCallbacks(mNonInteractionRunnable);
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * start non interaction timeout
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
@@ -317,7 +338,7 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		
 		if (mNonInteractionRunnable != null) mUiThreadHandler.removeCallbacks(mNonInteractionRunnable); 
 		else mNonInteractionRunnable = new Runnable() {
-			@Override public void run() { if (mOnNonInteractionListener != null) mOnNonInteractionListener.onNonInteraction(count); }
+			@Override public void run() { if (mTabletopListener != null) mTabletopListener.onNonInteraction(count); }
 		};
 		
 		mUiThreadHandler.postDelayed(mNonInteractionRunnable, mNonInteractionTimeout);
@@ -356,21 +377,34 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		
 		// return the newly added graphic at the center of the surface
 		PointF center = new PointF(getWidth() / 2, getHeight() / 2);
-		return addGraphic(bitmap, center, width);
+		return addGraphic(bitmap, center, width, true);
 	}
 	
-	private synchronized TabletopGraphic addGraphic(Bitmap bitmap, PointF center) {
-		return addGraphic(bitmap, center, 0);
+	private synchronized TabletopGraphic addGraphic(Bitmap bitmap, PointF center, boolean registerInteraction) {
+		return addGraphic(bitmap, center, 0, registerInteraction);
 	}
 	
-	private synchronized TabletopGraphic addGraphic(Bitmap bitmap, PointF center, int width) {
+	private synchronized TabletopGraphic addGraphic(Bitmap bitmap, PointF center, int width, boolean registerInteraction) {
 		if (mAutoPinGraphics) pinAllGraphics(); // pin all existing graphics if required
 		TabletopGraphic graphic = new TabletopGraphic(getContext(), mNextGraphicId++, bitmap, center, 0, width == 0 ? bitmap.getWidth() : width);
 		graphic.setCropRegion(mCropRegion);
 		graphic.setReactivatePinned(true);
 		mForegroundGraphics.add(graphic);
-		startNonInteractionTimeout();
+		if (registerInteraction) registerInteraction();
+		if (registerInteraction) startNonInteractionTimeout();
 		return graphic;
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * draw graphics
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	public boolean getDrawGraphics() {
+		return mDrawGraphics;
+	}
+	
+	public void setDrawGraphics(boolean draw) {
+		mDrawGraphics = draw;
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -392,6 +426,9 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		// draw the background region (debug)
 		if (DEBUG) canvas.drawColor(0x22FFFFFF);
 		
+		// return if no drawing is required
+		if (!mDrawGraphics) return;
+			
 		// draw the background graphics
 		for (TabletopGraphic graphic : mBackgroundGraphics) 
 			graphic.onDraw(canvas);
@@ -451,8 +488,6 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 					if (canvas != null) holder.unlockCanvasAndPost(canvas);
 				}
 			}
-			
-			System.out.println("thread stopped");
 		}
 	}
 
@@ -499,10 +534,11 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-	 * on non interaction listener
+	 * tabletop listener
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-	public static interface OnNonInteractionListener {
+	public static interface TabletopListener {
+		void onInteraction(int interactionCount);
 		void onNonInteraction(int interactionCount);
 	}
 	

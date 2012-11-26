@@ -75,10 +75,9 @@ public class SnaprPhotoHelper {
 	
 	// ---------------------------------
 
-	public static Bitmap getResizedBitmap(Bitmap bm, int newHeight, int newWidth) {
+	public static Bitmap getResizedBitmap(Bitmap bm, int newHeight, int newWidth, boolean recycle) {
 		Bitmap resizedBitmap = Bitmap.createScaledBitmap(bm, newWidth, newHeight, false);
-		bm.recycle();
-		System.gc();
+		if (bm != resizedBitmap) bm.recycle();
 		if (resizedBitmap.getConfig() != Config.ARGB_8888) return convertBitmapToARGB_8888(resizedBitmap);
 		else return resizedBitmap;
 	}

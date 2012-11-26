@@ -19,7 +19,7 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.graphics.BitmapFactory.Options;
 import android.util.DisplayMetrics;
 
 public abstract class JsonUtil {
@@ -48,18 +48,22 @@ public abstract class JsonUtil {
 		float scale = Math.min((float) Math.sqrt(maxBytes / (float) rawBytes), 1f);
 		Bitmap bitmap = loadAssetBitmap(context, folder, filename);
 		Bitmap result = Bitmap.createScaledBitmap(bitmap, (int) (dimens.getA() * scale), (int) (dimens.getB() * scale), true);
-		bitmap.recycle();
+		if (bitmap != result) bitmap.recycle();
 		System.gc();
 		return result;
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-	 * get bitmap dimensions
+	 * get asset bitmap dimensions
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
 	public static JSATuple<Integer, Integer> getAssetBitmapDimensions(Context context, String folder, String filenameMdpi, String filenameHdpi) throws IOException {
 		int density = context.getResources().getDisplayMetrics().densityDpi;
 		String filename = density <= DisplayMetrics.DENSITY_MEDIUM ? filenameMdpi : filenameHdpi;
+		return getAssetBitmapDimensions(context, folder, filename);
+	}
+	
+	public static JSATuple<Integer, Integer> getAssetBitmapDimensions(Context context, String folder, String filename) throws IOException {
 		InputStream stream = null;
 		try {
 			stream = context.getAssets().open(folder + File.separator + filename, AssetManager.ACCESS_RANDOM);
@@ -71,11 +75,24 @@ public abstract class JsonUtil {
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-	 * load bitmap
+	 * load larger asset bitmap
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	public static Bitmap loadLargerAssetBitmap(Context context, String folder, String filename, int minWidth, int minHeight) throws IOException {
+		JSATuple<Integer, Integer> dimens = getAssetBitmapDimensions(context, folder, filename);
+		int scale = JSAImageUtil.getLoadLargerImageScale(dimens.getA(), dimens.getB(), minWidth, minHeight);
+		Options options = new Options();
+		options.inSampleSize = scale;
+		options.inDither = true;
+		return loadAssetBitmap(context, folder, filename, options);
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * load asset bitmap
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
 	public static Bitmap loadAssetBitmap(Context context, String folder, String filename) throws IOException {
-		return loadAssetBitmap(context, folder, filename, filename);
+		return loadAssetBitmap(context, folder, filename, true);
 	}
 	
 	public static Bitmap loadAssetBitmap(Context context, String folder, String filenameMdpi, String filenameHdpi) throws IOException {
@@ -85,14 +102,23 @@ public abstract class JsonUtil {
 	public static Bitmap loadAssetBitmap(Context context, String folder, String filenameMdpi, String filenameHdpi, boolean required) throws IOException {
 		int density = context.getResources().getDisplayMetrics().densityDpi;
 		String filename = density <= DisplayMetrics.DENSITY_MEDIUM ? filenameMdpi : filenameHdpi;
-		InputStream stream = context.getAssets().open(folder + File.separator + filename, AssetManager.ACCESS_RANDOM);
+		return loadAssetBitmap(context, folder, filename, required);
+	}
+	
+	public static Bitmap loadAssetBitmap(Context context, String folder, String filename, boolean required) throws IOException {
 		try {
-			ByteArrayOutputStream out = JSAFileUtil.readFileStream(stream);
-			byte[] bytes = out.toByteArray();
-			return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+			return loadAssetBitmap(context, folder, filename, (Options) null);
 		} catch (IOException exception) {
 			if (!required) return null;
 			throw exception;
+		}
+	}
+	
+	public static Bitmap loadAssetBitmap(Context context, String folder, String filename, Options options) throws IOException {
+		InputStream stream = context.getAssets().open(folder + File.separator + filename, AssetManager.ACCESS_RANDOM);
+		
+		try {
+			return JSAImageUtil.loadImageStream(stream, options);
 		} finally {
 			if (stream != null) stream.close();
 		}
