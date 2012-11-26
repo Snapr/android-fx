@@ -238,12 +238,25 @@ public abstract class SnaprFilterUtil {
 		}
 
 		public void apply(Context context, Bitmap bitmap) throws IOException {
-			applyInner(context, bitmap);
-			if (mMaskImage == null) return;
-			Bitmap image = JsonUtil.loadLargerAssetBitmap(context, mImageFolder, mMaskImage, bitmap.getWidth(), bitmap.getHeight());
-			Bitmap image2 = SnaprPhotoHelper.getResizedBitmap(image, bitmap.getHeight(), bitmap.getHeight(), true);
-			CompositeEffect.applyImageEffect(bitmap, image2, 1.0f, BlendingMode.MULTIPLY.mCompositeBlendMode);
-			image2.recycle();
+			
+			// apply the effect on the bitmap (if no mask image is present)
+			if (mMaskImage == null) {
+				applyInner(context, bitmap);
+				return;
+			}
+			
+			// copy and apply the effect on the overlay bitmap
+			Bitmap overlayBitmap = Bitmap.createBitmap(bitmap);
+			applyInner(context, overlayBitmap);
+			
+			// load the image mask (at the same size as the target bitmap)
+			Bitmap maskBitmapLarge = JsonUtil.loadLargerAssetBitmap(context, mImageFolder, mMaskImage, bitmap.getWidth(), bitmap.getHeight());
+			Bitmap maskBitmap = SnaprPhotoHelper.getResizedBitmap(maskBitmapLarge, bitmap.getHeight(), bitmap.getHeight(), true);
+			
+			// apply the overlay bitmap to the base bitmap using the loaded mask
+			CompositeEffect.applyImageMaskEffect(bitmap, overlayBitmap, maskBitmap, mOpacity / 100f, mBlendingMode.mCompositeBlendMode);
+			overlayBitmap.recycle();
+			maskBitmap.recycle();
 			System.gc();
 		}
 		
@@ -309,11 +322,10 @@ public abstract class SnaprFilterUtil {
 
 		@Override public void applyInner(Context context, Bitmap bitmap) throws IOException {
 			if (DEBUG) Log.i(LOG_TAG, "applying image effect: " + mOpacity / 100f + " " + mBlendingMode.mCompositeBlendMode);
-			
-			Bitmap image = JsonUtil.loadLargerAssetBitmap(context, mImageFolder, mImage, bitmap.getWidth(), bitmap.getHeight());
-			Bitmap image2 = SnaprPhotoHelper.getResizedBitmap(image, bitmap.getHeight(), bitmap.getHeight(), true);
-			CompositeEffect.applyImageEffect(bitmap, image2, mOpacity / 100f, mBlendingMode.mCompositeBlendMode);
-			image2.recycle();
+			Bitmap imageBitmapLarge = JsonUtil.loadLargerAssetBitmap(context, mImageFolder, mImage, bitmap.getWidth(), bitmap.getHeight());
+			Bitmap imageBitmap = SnaprPhotoHelper.getResizedBitmap(imageBitmapLarge, bitmap.getHeight(), bitmap.getHeight(), true);
+			CompositeEffect.applyImageEffect(bitmap, imageBitmap, mOpacity / 100f, mBlendingMode.mCompositeBlendMode);
+			imageBitmap.recycle();
 			System.gc();
 		}
 	}

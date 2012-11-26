@@ -49,6 +49,7 @@ public class SnaprImageEditFragmentUtil {
 	 * constants: memory
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
+	public static final int MAX_CONCURRENT_IMAGES_IN_MEMORY = 5; 	// the maximum number of raw images allows within the allocated memory
 	public static final float IMAGE_MEMORY_PERCENTAGE = 60f; 		// the percentage of total memory raw images can occupy
 	public static final float STICKER_MEMORY_PERCENTAGE = 20f; 		// the percentage of total memory raw sticker images can occupy
 	
@@ -197,7 +198,9 @@ public class SnaprImageEditFragmentUtil {
 		// calculate the maximum number of bytes the bitmap can be
 		ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
 		long deviceMemoryBytes = am.getMemoryClass() * JSAFileUtil.BYTES_PER_MB;
-		long maxImageBytes = (long) (deviceMemoryBytes * IMAGE_MEMORY_PERCENTAGE / 100f) / 4; // we allow four concurrent images to fit within allocated memory
+		
+		// we allow a small number of concurrent images to fit within memory
+		long maxImageBytes = (long) (deviceMemoryBytes * IMAGE_MEMORY_PERCENTAGE / 100f) / MAX_CONCURRENT_IMAGES_IN_MEMORY;
 		long rawBytes = bitmap.getWidth() * bitmap.getHeight() * 4; // approximate
 		float memoryScale = Math.min(FloatMath.sqrt(maxImageBytes / (float) rawBytes), 1);
 		
