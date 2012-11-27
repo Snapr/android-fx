@@ -424,7 +424,7 @@ public class SnaprKitFragment extends Fragment
 					else
 					{						
 						// Call JavaScript
-						mWebView.loadUrl("javascript:upload_count(" + new Integer(numUploads).toString() + ");");
+						mWebView.loadUrl("javascript:upload_count(" + numUploads + ");");
 						
 						// Log
 						if (Global.LOG_MODE) Global.log( " -> " + Global.getCurrentMethod() + ": Called JavaScript with upload count " + numUploads);
@@ -1062,8 +1062,8 @@ public class SnaprKitFragment extends Fragment
         
         if((latitude != 0) && (longitude != 0))
         {
-        	params.add(new BasicNameValuePair(Global.PARAM_LATITUDE, new Double(latitude).toString()));
-        	params.add(new BasicNameValuePair(Global.PARAM_LONGITUDE, new Double(longitude).toString()));
+        	params.add(new BasicNameValuePair(Global.PARAM_LATITUDE, Double.valueOf(latitude).toString()));
+        	params.add(new BasicNameValuePair(Global.PARAM_LONGITUDE, Double.valueOf(longitude).toString()));
         }
         
         if ((redirectUrl != null) && (redirectUrl.length() > 0))
@@ -1257,7 +1257,7 @@ public class SnaprKitFragment extends Fragment
     	Random random = new Random();
     	int randomInt = random.nextInt();
     	if (randomInt < 0) randomInt = randomInt * -1;
-    	return new Integer(randomInt).toString();
+    	return Integer.valueOf(randomInt).toString();
     }
 
     // The action performed for snapr://upload
@@ -2221,7 +2221,7 @@ public class SnaprKitFragment extends Fragment
     	if (Global.LOG_MODE) Global.log(" <- " + Global.getCurrentMethod());
     }
     
-    @SuppressWarnings("unchecked") private void initCameraManager(Bundle savedInstanceState)
+    private void initCameraManager(Bundle savedInstanceState)
     {
     	// Log
     	if (Global.LOG_MODE) Global.log(" -> " + Global.getCurrentMethod());

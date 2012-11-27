@@ -246,7 +246,7 @@ public abstract class SnaprFilterUtil {
 			}
 			
 			// copy and apply the effect on the overlay bitmap
-			Bitmap overlayBitmap = Bitmap.createBitmap(bitmap);
+			Bitmap overlayBitmap = bitmap.copy(SnaprImageEditFragmentUtil.PREFERRED_BITMAP_CONFIG, false);
 			applyInner(context, overlayBitmap);
 			
 			// load the image mask (at the same size as the target bitmap)

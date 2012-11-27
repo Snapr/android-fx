@@ -93,9 +93,9 @@ public class SnaprImageEditFragmentUtil {
 				opts.inSampleSize = scale;
 				if (Build.VERSION.SDK_INT >= 11) opts.inMutable = true;
 				b = JSAImageUtil.loadImageFile(new File(mOriginalFilePath), opts);
-				b = SnaprPhotoHelper.cropBitmap(b);
+				b = SnaprPhotoHelper.cropBitmap(b, true);
 				
-				b = mTabletop.drawOnBitmap(b);
+				b = mTabletop.drawOnBitmap(b, true);
 				
 				if (mEffect != null) mEffect.getFilter().apply(mContext.getApplicationContext(), b);
 				
@@ -217,11 +217,7 @@ public class SnaprImageEditFragmentUtil {
 		if (temp == null) return null;
 		
 		// recycle the original bitmap (if scaled down)
-		if (temp != bitmap) {
-			bitmap.recycle();
-			bitmap = null;
-			System.gc();
-		}
+		if (temp != bitmap) bitmap.recycle();
 		
 		// assign the temp bitmap to the bitmap
 		bitmap = temp;
@@ -298,7 +294,7 @@ public class SnaprImageEditFragmentUtil {
 			e1.printStackTrace();
 		}
 
-		bitmap = SnaprPhotoHelper.cropBitmap(bitmap);
+		bitmap = SnaprPhotoHelper.cropBitmap(bitmap, true);
 		if (!saveTempImage(bitmap)) return null;
 
 		return bitmap;

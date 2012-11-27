@@ -512,10 +512,18 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	 * Scale the graphics such that the graphics are drawn on the given bitmap in the center of the surface.
 	 * Return the modified bitmap.
 	 */
-	public synchronized Bitmap drawOnBitmap(Bitmap bitmap) {
-		if (bitmap == null || !bitmap.isMutable()) throw new IllegalArgumentException();
+	public synchronized Bitmap drawOnBitmap(Bitmap bitmap, boolean recycle) {
+		if (bitmap == null) throw new IllegalArgumentException();
+		
+		// copy and and recycle the bitmap if not mutable
+		if (!bitmap.isMutable()) {
+			Bitmap originalBitmap = bitmap;
+			bitmap = bitmap.copy(bitmap.getConfig(), true);
+			if (recycle) originalBitmap.recycle();
+		}
+		
+		// cache values used during drawing
 		float scale = Math.min(getWidth() / (float) bitmap.getWidth(), getHeight() / (float) bitmap.getHeight());
-		if (!bitmap.isMutable()) bitmap = bitmap.copy(bitmap.getConfig(), true);
 		float offsetX = -(getWidth() - bitmap.getWidth() * scale) / 2;
 		float offsetY = -(getHeight() - bitmap.getHeight() * scale) / 2;
 		Canvas canvas = new Canvas(bitmap);

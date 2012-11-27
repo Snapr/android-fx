@@ -21,6 +21,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory.Options;
 import android.util.DisplayMetrics;
+import android.util.FloatMath;
 
 public abstract class JsonUtil {
 	
@@ -45,11 +46,10 @@ public abstract class JsonUtil {
 	public static Bitmap loadMemoryAwareAssetBitmap(Context context, String folder, String filename, long maxBytes) throws IOException {
 		JSATuple<Integer, Integer> dimens = getAssetBitmapDimensions(context, folder, filename, filename);
 		long rawBytes = dimens.getA() * dimens.getB() * 4;
-		float scale = Math.min((float) Math.sqrt(maxBytes / (float) rawBytes), 1f);
+		float scale = Math.min(FloatMath.sqrt(maxBytes / (float) rawBytes), 1f);
 		Bitmap bitmap = loadAssetBitmap(context, folder, filename);
 		Bitmap result = Bitmap.createScaledBitmap(bitmap, (int) (dimens.getA() * scale), (int) (dimens.getB() * scale), true);
 		if (bitmap != result) bitmap.recycle();
-		System.gc();
 		return result;
 	}
 	

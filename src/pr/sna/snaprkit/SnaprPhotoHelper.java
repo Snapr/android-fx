@@ -77,21 +77,21 @@ public class SnaprPhotoHelper {
 
 	public static Bitmap getResizedBitmap(Bitmap bm, int newHeight, int newWidth, boolean recycle) {
 		Bitmap resizedBitmap = Bitmap.createScaledBitmap(bm, newWidth, newHeight, false);
-		if (bm != resizedBitmap) bm.recycle();
-		if (resizedBitmap.getConfig() != Config.ARGB_8888) return convertBitmapToARGB_8888(resizedBitmap);
+		if (recycle && bm != resizedBitmap) bm.recycle();
+		if (resizedBitmap.getConfig() != Config.ARGB_8888) return convertBitmapToARGB_8888(resizedBitmap, true);
 		else return resizedBitmap;
 	}
 	
 	// ---------------------------------
 
-	public static Bitmap convertBitmapToARGB_8888(Bitmap bm) {
-		Bitmap src32 = bm.copy(Bitmap.Config.ARGB_8888, true);
+	public static Bitmap convertBitmapToARGB_8888(Bitmap bm, boolean recycle) {
+		Bitmap result = bm.copy(Bitmap.Config.ARGB_8888, true);
+		if (!recycle) return result;
 		bm.recycle();
-		System.gc();
-		return src32;
+		return result;
 	}
 	// ---------------------------------
-	public static Bitmap cropBitmap(Bitmap bitmapToCrop) {
+	public static Bitmap cropBitmap(Bitmap bitmapToCrop, boolean recycle) {
 		
 		Bitmap b;
 		
@@ -115,7 +115,7 @@ public class SnaprPhotoHelper {
 		}
 
 		// Convert to ARGB_8888
-		return SnaprPhotoHelper.convertBitmapToARGB_8888(b);
+		return SnaprPhotoHelper.convertBitmapToARGB_8888(b, recycle);
 	}
 	// ---------------------------------
 	

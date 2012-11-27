@@ -489,7 +489,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 					}
 					
 					// draw the stickers and apply the effect
-					bitmap = mTabletop.drawOnBitmap(bitmap);
+					bitmap = mTabletop.drawOnBitmap(bitmap, true);
 					mComposedBitmapInteractionCount = mTabletop.getInteractionCount();
 					if (isCancelled()) return null;
 					if (mAppliedEffect != null) mAppliedEffect.getFilter().apply(mContext, bitmap);
