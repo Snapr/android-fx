@@ -371,8 +371,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private void updateViewEditedImageView() {
 		boolean isShowingStickers = mInteractionState.equals(InteractionState.SHOWING_STICKERS);
 		boolean isStickerUpToDate = mComposedBitmapInteractionCount == mTabletop.getInteractionCount();
-		boolean isBaseBitmapEffectApplied = mBaseBitmapEffect != null && !mEffects.get(0).equals(mBaseBitmapEffect);
-		boolean preferComposed = !isShowingStickers || (isBaseBitmapEffectApplied && isStickerUpToDate);
+//		boolean isBaseBitmapEffectApplied = mBaseBitmapEffect != null && !mEffects.get(0).equals(mBaseBitmapEffect);
+		boolean preferComposed = !isShowingStickers || (/* isBaseBitmapEffectApplied && */ isStickerUpToDate); // show composed even with no effect applied
 		boolean showComposed = preferComposed && mComposedBitmap != null && mComposedBitmap != mBaseBitmap;
 		mEditedImageView.setImageBitmap(showComposed ? mComposedBitmap : mBaseBitmap);
 		mTabletop.setDrawGraphics(!showComposed);
@@ -427,7 +427,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		int maxBitmapLength = Math.max(sticker.getImage().getWidth(), sticker.getImage().getHeight()); 
 		float bitmapFactor = maxBitmapLength / (float) minImageLength;
 		float bitmapScale = Math.min(MAX_NEW_GRAPHIC_FACTOR / bitmapFactor, 1);
-		mTabletop.addGraphic(sticker.getImage(), (int) (sticker.getImage().getWidth() * bitmapScale));
+		mTabletop.addGraphic(sticker, (int) (sticker.getImage().getWidth() * bitmapScale));
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -60,7 +60,7 @@ public abstract class SnaprFilterUtil {
 		private final String mTag;
 		private final int mCompositeBlendMode;
 
-		private BlendingMode(String tag) { mTag = tag; mCompositeBlendMode = CompositeEffect.BLEND_MODE_MULTIPLY; }
+		private BlendingMode(String tag) { mTag = tag; mCompositeBlendMode = CompositeEffect.BLEND_MODE_NORMAL; }
 		private BlendingMode(String tag, int compositeBlendMode) { mTag = tag; mCompositeBlendMode = compositeBlendMode; }
 
 		public static BlendingMode getBlendingMode(String tag) {

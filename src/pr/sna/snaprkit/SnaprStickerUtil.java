@@ -13,7 +13,7 @@ import org.json.JSONObject;
 
 import pr.sna.snaprkit.SnaprFilterUtil.BlendingMode;
 import pr.sna.snaprkit.SnaprFilterUtil.OnImageLoadListener;
-import pr.sna.snaprkit.effect.CompositeEffect;
+import pr.sna.snaprkit.tabletop.TabletopSurfaceView.GraphicElement;
 import pr.sna.snaprkit.utils.JsonUtil;
 import android.app.ActivityManager;
 import android.content.Context;
@@ -94,7 +94,7 @@ public abstract class SnaprStickerUtil {
 	 * sticker
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
-	public static final class Sticker {
+	public static final class Sticker implements GraphicElement {
 		private String mName;
 		private String mSlug;
 		private int mOpacity;
@@ -184,10 +184,11 @@ public abstract class SnaprStickerUtil {
 			bitmap.recycle();
 			System.gc();
 			
-			// apply the blend mode
-			CompositeEffect.applyColorEffect(result, 0xFFFFFF, 0, blendingMode.getCompositeBlendMode());
-			
 			return result;
+		}
+
+		@Override public Bitmap getBitmap() {
+			return mImage;
 		}
 	}
 	

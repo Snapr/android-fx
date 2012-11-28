@@ -265,7 +265,7 @@ public class TabletopGraphic implements Cloneable {
 	 * draw
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-	public void onDraw(Canvas canvas) {
+	public void onDraw(Canvas canvas, DrawContext context) {
 		boolean isPinned = mState.equals(State.PINNED);
 		boolean isDeleted = mState.equals(State.DELETED);
 		boolean isDisabled = mState.equals(State.DISABLED);
@@ -603,12 +603,16 @@ public class TabletopGraphic implements Cloneable {
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
 	public static void onDrawScaled(TabletopGraphic graphic, Canvas canvas, float scaleX, float scaleY, float offsetX, float offsetY) {
+		onDrawScaled(graphic, canvas, scaleX, scaleY, offsetX, offsetY, new ScaledDrawContext());
+	}
+	
+	public static void onDrawScaled(TabletopGraphic graphic, Canvas canvas, float scaleX, float scaleY, float offsetX, float offsetY, DrawContext context) {
 		TabletopGraphic clone = graphic.clone();
 		clone.setCenterX(clone.getCenterX() + offsetX);
 		clone.setCenterY(clone.getCenterY() + offsetY);
 		clone.scale(scaleX, scaleY);
 		clone.mState = State.PINNED;
-		clone.onDraw(canvas);
+		clone.onDraw(canvas, context);
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -641,5 +645,12 @@ public class TabletopGraphic implements Cloneable {
 		if (graphic.mHeight != mHeight) return false;
 		return true;
 	}
+
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * draw context
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+	public static class DrawContext { }
+	public static class ScaledDrawContext extends DrawContext { }
 	
 }

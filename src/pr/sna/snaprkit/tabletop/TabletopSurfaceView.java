@@ -35,7 +35,7 @@ import android.view.SurfaceView;
  * are moved to the top of the foreground stack.
  * 
  * {@link TabletopGraphic} objects can be added in two ways, either programmatically through {@link #addGraphic(Bitmap)} (placing the given 
- * graphic in the center of the surface) or through user interaction through setting {@link #setTouchBitmap(Bitmap)} and placing the graphic
+ * graphic in the center of the surface) or through user interaction through setting {@link #setTouchElement(Bitmap)} and placing the graphic
  * on the surface when the user touches an empty space.
  */
 
@@ -47,7 +47,7 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	private int mNextGraphicId;						// the id to assign to the next graphic created 
 	private TabletopGraphic mActiveGraphic; 		// the graphic currently being edited by the user
 	private int mActiveGraphicPointerId;			// the id of the pointer being used to edit the graphic
-	private Bitmap mTouchBitmap;					// the graphic (retrieved from assets) to add when the user touches the blank surface
+	private GraphicElement mTouchElement;			// the graphic (retrieved from assets) to add when the user touches the blank surface
 	
 	private RectF mCropRegion;						// the crop region of the surface (not yet implemented)
 	private /* final */ Paint mCropRegionPaint;		// the paint to draw the crop region with
@@ -71,7 +71,7 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
 	private static final int DEFAULT_MAX_GRAPHIC_COUNT = 10;
-	private static final long DEFAULT_NON_INTERACTION_TIMEOUT = 500;
+	private static final long DEFAULT_NON_INTERACTION_TIMEOUT = 1000;
 	
 	private static final boolean DEBUG = false;
 	
@@ -113,17 +113,17 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	 * touch bitmap
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
-	public Bitmap getTouchBitmap() {
-		return mTouchBitmap;
+	public GraphicElement getTouchElement() {
+		return mTouchElement;
 	}
 	
-	public void setTouchBitmap(String asset) throws IOException {
+	public void setTouchElement(String asset) throws IOException {
 		Bitmap bitmap = loadBitmap(getContext(), asset);
-		setTouchBitmap(bitmap);
+		setTouchElement(new BitmapGraphicElement(bitmap));
 	}
 	
-	public void setTouchBitmap(Bitmap bitmap) {
-		mTouchBitmap = bitmap;
+	public void setTouchElement(GraphicElement element) {
+		mTouchElement = element;
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -268,14 +268,14 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		}
 		
 		// return if there is no graphic to add
-		if (mTouchBitmap == null) return true;
+		if (mTouchElement == null) return true;
 		
 		// return if the maximum number of graphics have been added
 		if (graphicCount >= mMaxGraphicCount) return true;
 		
 		// create and add a new graphic to the surface
 		PointF center = new PointF(event.getX(pointerIndex), event.getY(pointerIndex));
-		TabletopGraphic graphic = addGraphic(mTouchBitmap, center, false);
+		TabletopGraphic graphic = addGraphic(mTouchElement, center, false);
 		
 		// set the newly added graphic as the active graphic (if possible)
 		boolean handle = graphic.onTouchEvent(event);
@@ -366,10 +366,26 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-	 * add graphic
+	 * add graphic (bitmap)
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
 	public synchronized TabletopGraphic addGraphic(Bitmap bitmap, int width) {
+		return addGraphic(new BitmapGraphicElement(bitmap), width);
+	}
+	
+	protected synchronized TabletopGraphic addGraphic(Bitmap bitmap, PointF center, boolean registerInteraction) {
+		return addGraphic(new BitmapGraphicElement(bitmap), center, 0, registerInteraction);
+	}
+	
+	protected synchronized TabletopGraphic addGraphic(Bitmap bitmap, PointF center, int width, boolean registerInteraction) {
+		return addGraphic(new BitmapGraphicElement(bitmap), center, width, registerInteraction);
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * add graphic (element)
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	public synchronized TabletopGraphic addGraphic(GraphicElement element, int width) {
 		int graphicCount = mBackgroundGraphics.size() + mForegroundGraphics.size();
 		
 		// return if the maximum number of graphics have been added
@@ -377,22 +393,30 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		
 		// return the newly added graphic at the center of the surface
 		PointF center = new PointF(getWidth() / 2, getHeight() / 2);
-		return addGraphic(bitmap, center, width, true);
+		return addGraphic(element, center, width, true);
 	}
 	
-	private synchronized TabletopGraphic addGraphic(Bitmap bitmap, PointF center, boolean registerInteraction) {
-		return addGraphic(bitmap, center, 0, registerInteraction);
+	protected synchronized TabletopGraphic addGraphic(GraphicElement element, PointF center, boolean registerInteraction) {
+		return addGraphic(element, center, 0, registerInteraction);
 	}
 	
-	private synchronized TabletopGraphic addGraphic(Bitmap bitmap, PointF center, int width, boolean registerInteraction) {
+	protected synchronized TabletopGraphic addGraphic(GraphicElement element, PointF center, int width, boolean registerInteraction) {
 		if (mAutoPinGraphics) pinAllGraphics(); // pin all existing graphics if required
-		TabletopGraphic graphic = new TabletopGraphic(getContext(), mNextGraphicId++, bitmap, center, 0, width == 0 ? bitmap.getWidth() : width);
+		TabletopGraphic graphic = newTabletopGraphic(element, mNextGraphicId++, center, width);
 		graphic.setCropRegion(mCropRegion);
 		graphic.setReactivatePinned(true);
 		mForegroundGraphics.add(graphic);
 		if (registerInteraction) registerInteraction();
 		if (registerInteraction) startNonInteractionTimeout();
 		return graphic;
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * new tabletop graphic
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	protected synchronized TabletopGraphic newTabletopGraphic(GraphicElement element, int id, PointF center, int width) {
+		return new TabletopGraphic(getContext(), id, element.getBitmap(), center, 0, width == 0 ? element.getBitmap().getWidth() : width);
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -431,11 +455,11 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 			
 		// draw the background graphics
 		for (TabletopGraphic graphic : mBackgroundGraphics) 
-			graphic.onDraw(canvas);
+			graphic.onDraw(canvas, null);
 		
 		// draw the foreground graphics
 		for (TabletopGraphic graphic : mForegroundGraphics) 
-			graphic.onDraw(canvas);
+			graphic.onDraw(canvas, null);
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -526,7 +550,7 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		float scale = Math.min(getWidth() / (float) bitmap.getWidth(), getHeight() / (float) bitmap.getHeight());
 		float offsetX = -(getWidth() - bitmap.getWidth() * scale) / 2;
 		float offsetY = -(getHeight() - bitmap.getHeight() * scale) / 2;
-		Canvas canvas = new Canvas(bitmap);
+		Canvas canvas = new BitmapCanvas(bitmap);
 		float inverseScale = 1 / scale;
 		
 		// draw the background graphics
@@ -548,6 +572,47 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	public static interface TabletopListener {
 		void onInteraction(int interactionCount);
 		void onNonInteraction(int interactionCount);
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * graphic element
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	public static interface GraphicElement {
+		Bitmap getBitmap();
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * bitmap graphic element
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	public static class BitmapGraphicElement implements GraphicElement {
+		private final Bitmap mBitmap;
+		
+		public BitmapGraphicElement(Bitmap bitmap) {
+			mBitmap = bitmap;
+		}
+
+		@Override public Bitmap getBitmap() {
+			return mBitmap;
+		}
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * bitmap canvas
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	public static class BitmapCanvas extends Canvas {
+		private final Bitmap mBitmap;
+		
+		public BitmapCanvas(Bitmap bitmap) {
+			super(bitmap);
+			mBitmap = bitmap;
+		}
+		
+		public Bitmap getBitmap() {
+			return mBitmap;
+		}
 	}
 	
 }

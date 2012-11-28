@@ -22,7 +22,7 @@
 			android:contentDescription="@string/snaprkit_empty_content_description"
 			android:scaleType="fitCenter" />
 
-		<pr.sna.snaprkit.tabletop.TabletopSurfaceView
+		<pr.sna.snaprkit.tabletop.sticker.StickerTabletopSurfaceView
 			android:id="@+id/tabletop"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent" />
