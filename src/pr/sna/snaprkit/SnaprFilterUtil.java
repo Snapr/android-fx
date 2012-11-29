@@ -66,7 +66,7 @@ public abstract class SnaprFilterUtil {
 		public static BlendingMode getBlendingMode(String tag) {
 			for (BlendingMode mode : BlendingMode.values())
 				if (mode.mTag.equals(tag)) return mode;
-			return null;
+			throw new IllegalArgumentException("blend mode unknown: " + tag);
 		}
 		
 		public int getCompositeBlendMode() {
@@ -173,7 +173,10 @@ public abstract class SnaprFilterUtil {
 				else throw new JSONException(exception.getMessage() + ": " + filterSlug);
 			} catch (IOException exception) {
 				if (filterSlug == null) throw exception;
-				else throw new IOException(exception.getMessage() + ": " + filterSlug);
+				else throw new IOException(exception.getMessage() + ": " + filterSlug, exception);
+			} catch (RuntimeException exception) {
+				if (filterSlug == null) throw exception;
+				else throw new RuntimeException(exception.getMessage() + ": " + filterSlug, exception);
 			}
 		}
 

@@ -496,6 +496,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 					if (isCancelled()) return null;
 					return bitmap;
 				} catch (IOException exception) {
+					if (DEBUG) Log.e(SnaprImageEditFragment.class.getSimpleName(), "error applying effect", exception);
 					return null;
 				}
 			}
@@ -504,6 +505,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		@Override protected void onPostExecute(Bitmap result) {
 			super.onPostExecute(result);
 			if (mShowProgress) mFragmentListener.onHideProgressBlocking();
+			if (result == null && !isCancelled()) Toast.makeText(mContext, R.string.snaprkit_problem_applying_effect, Toast.LENGTH_LONG).show();
 			if (isCancelled() || result == null) return;
 			mComposedBitmap = result;
 			mComposeBitmapAsyncTask = null;
