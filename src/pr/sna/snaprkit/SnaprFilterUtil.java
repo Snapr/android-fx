@@ -17,7 +17,7 @@ import pr.sna.snaprkit.effect.HSBEffect;
 import pr.sna.snaprkit.effect.LevelsEffect;
 import pr.sna.snaprkit.effect.PolynomialFunctionEffect;
 import pr.sna.snaprkit.effect.SaturateEffect;
-import pr.sna.snaprkit.utils.JsonUtil;
+import pr.sna.snaprkit.util.JsonUtil;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
@@ -173,7 +173,7 @@ public abstract class SnaprFilterUtil {
 				else throw new JSONException(exception.getMessage() + ": " + filterSlug);
 			} catch (IOException exception) {
 				if (filterSlug == null) throw exception;
-				else throw new IOException(exception.getMessage() + ": " + filterSlug, exception);
+				else throw new IOException(exception.getMessage() + ": " + filterSlug);
 			} catch (RuntimeException exception) {
 				if (filterSlug == null) throw exception;
 				else throw new RuntimeException(exception.getMessage() + ": " + filterSlug, exception);

@@ -1,4 +1,4 @@
-package pr.sna.snaprkit.utils;
+package pr.sna.snaprkit.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -23,6 +23,9 @@ import android.graphics.BitmapFactory.Options;
 import android.util.DisplayMetrics;
 import android.util.FloatMath;
 
+/**
+ * @author JSA
+ */
 public abstract class JsonUtil {
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

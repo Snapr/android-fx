@@ -14,7 +14,7 @@ import org.json.JSONObject;
 import pr.sna.snaprkit.SnaprFilterUtil.BlendingMode;
 import pr.sna.snaprkit.SnaprFilterUtil.OnImageLoadListener;
 import pr.sna.snaprkit.tabletop.TabletopSurfaceView.GraphicElement;
-import pr.sna.snaprkit.utils.JsonUtil;
+import pr.sna.snaprkit.util.JsonUtil;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.graphics.Bitmap;

@@ -1,19 +1,8 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
 	
-    <!-- Snapr App -->
-    <string name="snaprkit_name">Snapr</string>
-    <string name="snaprkit_location_error">Could not retrieve your location!</string>
-    <string name="snaprkit_finish">Finish</string>
     <string name="snaprkit_empty_content_description"></string>
-    <string name="snaprkit_close">Close</string>
     <string name="snaprkit_please_wait">Please wait</string>
-    
-    <!-- FX Module: Picker -->
-    <string name="snaprkit_app_name">SnaprImage</string>
-    <string name="snaprkit_pick_photo">Pick photo</string>
-    <string name="snaprkit_take_photo">Take photo</string>
-    <string name="snaprkit_cannot_write_to_sdcard">Cannot store photo. Please check storage.</string>
     
     <!-- FX Module: Editor -->
     <string name="snaprkit_applying">Applying…</string>

@@ -13,7 +13,7 @@ import nz.co.juliusspencer.android.JSAFileUtil;
 import nz.co.juliusspencer.android.JSAImageUtil;
 import nz.co.juliusspencer.android.JSATuple;
 import pr.sna.snaprkit.tabletop.TabletopSurfaceView;
-import pr.sna.snaprkit.utils.CameraUtils;
+import pr.sna.snaprkit.util.CameraUtil;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.content.Context;
@@ -103,7 +103,7 @@ public class SnaprImageEditFragmentUtil {
 				b.compress(CompressFormat.JPEG, 100, fos);
 
 				// copy the exif data from the source to the destination
-				if (!mOriginalFilePath.equals(mSaveFilePath)) CameraUtils.copyExifData(new File(mOriginalFilePath), new File(mSaveFilePath));
+				if (!mOriginalFilePath.equals(mSaveFilePath)) CameraUtil.copyExifData(new File(mOriginalFilePath), new File(mSaveFilePath));
 				
 				// Tell the media scanner about the new file so that it is
 				// immediately available to the user.
@@ -202,7 +202,7 @@ public class SnaprImageEditFragmentUtil {
 		// we allow a small number of concurrent images to fit within memory
 		long maxImageBytes = (long) (deviceMemoryBytes * IMAGE_MEMORY_PERCENTAGE / 100f) / MAX_CONCURRENT_IMAGES_IN_MEMORY;
 		long rawBytes = bitmap.getWidth() * bitmap.getHeight() * 4; // approximate
-		float memoryScale = Math.min(FloatMath.sqrt(maxImageBytes / (float) rawBytes), 1);
+		float memoryScale = Math.min(FloatMath.sqrt(maxImageBytes / (float) rawBytes), 1f);
 		
 		// calculate the scale the bitmap should be to fit the device width perfectly (maintaining minimum width and height larger than device width)
 		float deviceScale = Math.min(length / (float) Math.min(bitmap.getWidth(), bitmap.getHeight()), 1f);
