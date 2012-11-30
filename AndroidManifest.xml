@@ -4,9 +4,16 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
-    <!-- SnaprKit: Minimum SDK version, required -->
+    <!-- SnaprKitFX: Minimum SDK version, required -->
     <uses-sdk android:minSdkVersion="8" />
 
-    <application />
+    <application>
+        <!-- SnaprKitFX: Activities, required -->
+        <activity
+            android:name="pr.sna.snaprkit.SnaprImageEditFragmentActivity"
+            android:screenOrientation="portrait"
+            android:configChanges="keyboardHidden|orientation">
+        </activity>
+    </application>
 
 </manifest>
