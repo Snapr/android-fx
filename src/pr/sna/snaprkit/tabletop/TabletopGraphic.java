@@ -519,14 +519,14 @@ public class TabletopGraphic implements Cloneable {
 	private void initialiseBitmaps(Context context) {
 		if (ROTATION_BITMAP_UP != null) return;
 		
-		ROTATION_BITMAP_UP = ((BitmapDrawable) context.getResources().getDrawable(R.drawable.snaprkit_btn_sticker_handle_normal)).getBitmap();
-		ROTATION_BITMAP_DOWN = ((BitmapDrawable) context.getResources().getDrawable(R.drawable.snaprkit_btn_sticker_handle_down)).getBitmap();
+		ROTATION_BITMAP_UP = ((BitmapDrawable) context.getResources().getDrawable(R.drawable.snaprkitfx_btn_sticker_handle_normal)).getBitmap();
+		ROTATION_BITMAP_DOWN = ((BitmapDrawable) context.getResources().getDrawable(R.drawable.snaprkitfx_btn_sticker_handle_down)).getBitmap();
 		
-		DELETE_BITMAP_UP = ((BitmapDrawable) context.getResources().getDrawable(R.drawable.snaprkit_btn_sticker_delete_normal)).getBitmap();
-		DELETE_BITMAP_DOWN = ((BitmapDrawable) context.getResources().getDrawable(R.drawable.snaprkit_btn_sticker_delete_down)).getBitmap();
+		DELETE_BITMAP_UP = ((BitmapDrawable) context.getResources().getDrawable(R.drawable.snaprkitfx_btn_sticker_delete_normal)).getBitmap();
+		DELETE_BITMAP_DOWN = ((BitmapDrawable) context.getResources().getDrawable(R.drawable.snaprkitfx_btn_sticker_delete_down)).getBitmap();
 		
-		PIN_BITMAP_UP = ((BitmapDrawable) context.getResources().getDrawable(R.drawable.snaprkit_btn_sticker_pin_normal)).getBitmap();
-		PIN_BITMAP_DOWN = ((BitmapDrawable) context.getResources().getDrawable(R.drawable.snaprkit_btn_sticker_pin_down)).getBitmap();
+		PIN_BITMAP_UP = ((BitmapDrawable) context.getResources().getDrawable(R.drawable.snaprkitfx_btn_sticker_pin_normal)).getBitmap();
+		PIN_BITMAP_DOWN = ((BitmapDrawable) context.getResources().getDrawable(R.drawable.snaprkitfx_btn_sticker_pin_down)).getBitmap();
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

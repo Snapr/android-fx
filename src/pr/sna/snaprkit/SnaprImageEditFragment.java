@@ -99,7 +99,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 	@Override public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		return inflater.inflate(R.layout.snaprkit_edit_fragment, container, false);
+		return inflater.inflate(R.layout.snaprkitfx_edit_fragment, container, false);
 	}
 
 	@Override public void onActivityCreated(Bundle savedInstanceState) {
@@ -205,7 +205,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private void onOriginalBitmapAvailable(String originalFilepath, long photoTimestamp) {
 		mBaseBitmap = SnaprImageEditFragmentUtil.saveOriginalTempImage(getActivity(), originalFilepath, photoTimestamp);
 		if (mBaseBitmap == null) {
-			Toast.makeText(getActivity(), R.string.snaprkit_unable_to_load_image_try_another_, Toast.LENGTH_SHORT).show();
+			Toast.makeText(getActivity(), R.string.snaprkitfx_unable_to_load_image_try_another_, Toast.LENGTH_SHORT).show();
 			mFragmentListener.onCancel();		
 		} else {
 			mFragmentListener.onAddAnalytic(SnaprImageEditFragmentActivity.ANALYTIC_PAGE_LOADED);
@@ -236,12 +236,12 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		
 		// create the thumbnail views for each effect
 		for (SnaprEffect effect : mEffects) {
-			View view = inflater.inflate(R.layout.snaprkit_effect_item, null);
+			View view = inflater.inflate(R.layout.snaprkitfx_effect_item, null);
 			view.setTag(effect);
 			
 			ImageView image = (ImageView) view.findViewById(R.id.effect_imageview);
 			if (effect.getFilter().getThumbnail() != null) image.setImageBitmap(effect.getFilter().getThumbnail());
-			else image.setImageResource(R.drawable.snaprkit_ic_effect_placeholder);
+			else image.setImageResource(R.drawable.snaprkitfx_ic_effect_placeholder);
 			image.setTag(effect);
 
 			TextView tv = ((TextView) view.findViewById(R.id.effect_textview));
@@ -262,7 +262,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		if (view == null) return;
 		ImageView image = (ImageView) view.findViewById(R.id.effect_imageview);
 		if (effect.getFilter().getThumbnail() != null) image.setImageBitmap(effect.getFilter().getThumbnail());
-		else image.setImageResource(R.drawable.snaprkit_ic_effect_placeholder);
+		else image.setImageResource(R.drawable.snaprkitfx_ic_effect_placeholder);
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -283,12 +283,12 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 
 		// create the thumbnail views for each sticker		
 		for (Sticker sticker : mStickers) {
-			View view = inflater.inflate(R.layout.snaprkit_effect_item, null);
+			View view = inflater.inflate(R.layout.snaprkitfx_effect_item, null);
 			view.setTag(sticker);
 			
 			ImageView image = (ImageView) view.findViewById(R.id.effect_imageview);
 			if (sticker.getThumbnail() != null) image.setImageBitmap(sticker.getThumbnail());
-			else image.setImageResource(R.drawable.snaprkit_ic_sticker_placeholder);
+			else image.setImageResource(R.drawable.snaprkitfx_ic_sticker_placeholder);
 			image.setTag(sticker);
 			
 			TextView tv = ((TextView) view.findViewById(R.id.effect_textview));
@@ -309,7 +309,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		if (view == null) return;
 		ImageView image = (ImageView) view.findViewById(R.id.effect_imageview);
 		if (sticker.getThumbnail() != null) image.setImageBitmap(sticker.getThumbnail());
-		else image.setImageResource(R.drawable.snaprkit_ic_sticker_placeholder);
+		else image.setImageResource(R.drawable.snaprkitfx_ic_sticker_placeholder);
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -339,7 +339,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		
 		// update the next button
 		boolean isNextButton = hasStickers && hasFilters && !isShowingFilters;
-		int resourceId = isNextButton ? R.drawable.snaprkit_btn_next_normal : R.drawable.snaprkit_btn_tick;
+		int resourceId = isNextButton ? R.drawable.snaprkitfx_btn_next_normal : R.drawable.snaprkitfx_btn_tick;
 		mNextButton.setBackgroundResource(resourceId);
 		mNextButton.setEnabled(isNextButton || !isLocked);
 		
@@ -416,7 +416,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		
 		// toast the user if the sticker assets are not yet available
 		if (sticker.getImage() == null) {
-			Toast toast = Toast.makeText(getActivity(), R.string.snaprkit_loading_sticker_please_wait, Toast.LENGTH_SHORT);
+			Toast toast = Toast.makeText(getActivity(), R.string.snaprkitfx_loading_sticker_please_wait, Toast.LENGTH_SHORT);
 			toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);
 			toast.show();
 			return;
@@ -466,7 +466,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		}
 
 		@Override protected void onPreExecute() {
-			if (mShowProgress) mFragmentListener.onShowProgressBlocking(getString(R.string.snaprkit_applying));
+			if (mShowProgress) mFragmentListener.onShowProgressBlocking(getString(R.string.snaprkitfx_applying));
 			super.onPreExecute();
 		}
 		
@@ -505,7 +505,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		@Override protected void onPostExecute(Bitmap result) {
 			super.onPostExecute(result);
 			if (mShowProgress) mFragmentListener.onHideProgressBlocking();
-			if (result == null && !isCancelled()) Toast.makeText(mContext, R.string.snaprkit_problem_applying_effect, Toast.LENGTH_LONG).show();
+			if (result == null && !isCancelled()) Toast.makeText(mContext, R.string.snaprkitfx_problem_applying_effect, Toast.LENGTH_LONG).show();
 			if (isCancelled() || result == null) return;
 			mComposedBitmap = result;
 			mComposeBitmapAsyncTask = null;
@@ -526,7 +526,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 
 		@Override protected void onPreExecute() {
 			super.onPreExecute();
-			mFragmentListener.onShowProgressBlocking(getString(R.string.snaprkit_saving_));
+			mFragmentListener.onShowProgressBlocking(getString(R.string.snaprkitfx_saving_));
 			mBaseBitmap = null; // null bitmaps to release unused memory
 			mComposedBitmap = null;
 			updateViewEditedImageView();
@@ -538,7 +538,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			super.onPostExecute(result);
 			mFragmentListener.onHideProgressBlocking();
 			if (result != null && result.getB()) mFragmentListener.onEditComplete(result.getA().getAbsolutePath());
-			else Toast.makeText(getActivity(), R.string.snaprkit_problem_saving_check_storage, Toast.LENGTH_SHORT).show();
+			else Toast.makeText(getActivity(), R.string.snaprkitfx_problem_saving_check_storage, Toast.LENGTH_SHORT).show();
 		}
 	}
 	
@@ -550,7 +550,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		
 		@Override protected void onPreExecute() {
 			super.onPreExecute();
-			mFragmentListener.onShowProgressBlocking(getString(R.string.snaprkit_loading));
+			mFragmentListener.onShowProgressBlocking(getString(R.string.snaprkitfx_loading));
 		}
 
 		@Override protected JSATuple<FilterPack, StickerPack> doInBackground(Void... params) {

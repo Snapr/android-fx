@@ -19,7 +19,7 @@
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:adjustViewBounds="true"
-			android:contentDescription="@string/snaprkit_empty_content_description"
+			android:contentDescription="@string/snaprkitfx_empty_content_description"
 			android:scaleType="fitCenter" />
 
 		<pr.sna.snaprkit.tabletop.sticker.StickerTabletopSurfaceView
@@ -32,7 +32,7 @@
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:layout_margin="@dimen/message_container_margin"
-			android:background="@drawable/snaprkit_msg_circle"
+			android:background="@drawable/snaprkitfx_msg_circle"
 			android:gravity="center"
 			android:orientation="vertical"
 			android:padding="@dimen/message_container_padding"
@@ -41,7 +41,7 @@
 			<TextView
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:text="@string/snaprkit_hold_on"
+				android:text="@string/snaprkitfx_hold_on"
 				android:textColor="@android:color/white"
 				android:textSize="@dimen/message_title_text_size"
 				android:textStyle="bold" />
@@ -99,7 +99,7 @@
 	<LinearLayout
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:background="@drawable/snaprkit_bg_footer_tile"
+		android:background="@drawable/snaprkitfx_bg_footer_tile"
 		android:gravity="center_vertical"
 		android:orientation="horizontal"
 		android:padding="10dp" >
@@ -108,8 +108,8 @@
 			android:id="@+id/cancel_button"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:background="@drawable/snaprkit_btn_cross"
-			android:contentDescription="@string/snaprkit_empty_content_description" />
+			android:background="@drawable/snaprkitfx_btn_cross"
+			android:contentDescription="@string/snaprkitfx_empty_content_description" />
 
 		<View
 			android:layout_width="0dp"
@@ -120,8 +120,8 @@
 			android:id="@+id/sticker_button"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:background="@drawable/snaprkit_btn_sticker"
-			android:contentDescription="@string/snaprkit_empty_content_description" />
+			android:background="@drawable/snaprkitfx_btn_sticker"
+			android:contentDescription="@string/snaprkitfx_empty_content_description" />
 
 		<View
 			android:layout_width="10dp"
@@ -131,8 +131,8 @@
 			android:id="@+id/filter_button"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:background="@drawable/snaprkit_btn_filter"
-			android:contentDescription="@string/snaprkit_empty_content_description" />
+			android:background="@drawable/snaprkitfx_btn_filter"
+			android:contentDescription="@string/snaprkitfx_empty_content_description" />
 
 		<View
 			android:layout_width="0dp"
@@ -143,8 +143,8 @@
 			android:id="@+id/next_button"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:background="@drawable/snaprkit_btn_tick"
-			android:contentDescription="@string/snaprkit_empty_content_description" />
+			android:background="@drawable/snaprkitfx_btn_tick"
+			android:contentDescription="@string/snaprkitfx_empty_content_description" />
 	</LinearLayout>
 
 </LinearLayout>

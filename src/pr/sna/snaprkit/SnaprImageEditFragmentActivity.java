@@ -70,7 +70,7 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-        setContentView(R.layout.snaprkit_edit_layout);
+        setContentView(R.layout.snaprkitfx_edit_layout);
         
 		SnaprImageEditFragment fragment = (SnaprImageEditFragment) getSupportFragmentManager().findFragmentById(R.id.fragment);
 		fragment.setFragmentListener(this);
@@ -132,7 +132,7 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 	}
 
 	@Override public void onShowProgressBlocking(String title) {
-		JSAProgressDialogFragment.create(getString(R.string.snaprkit_please_wait), title).show(this);
+		JSAProgressDialogFragment.create(getString(R.string.snaprkitfx_please_wait), title).show(this);
 	}
 	
 	@Override public void onShowProgressBlocking(String title, String text) {
@@ -260,22 +260,22 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		
 		@Override public Dialog onCreateDialog(Bundle savedInstanceState) {
 			
-			View view = getActivity().getLayoutInflater().inflate(R.layout.snaprkit_cancel_dialog, null);
+			View view = getActivity().getLayoutInflater().inflate(R.layout.snaprkitfx_cancel_dialog, null);
 			final TextView text = (TextView) view.findViewById(R.id.textview);
-			text.setText(R.string.snaprkit_save_photo_questionmark);
+			text.setText(R.string.snaprkitfx_save_photo_questionmark);
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-			builder.setTitle(R.string.snaprkit_save_photo_questionmark);
+			builder.setTitle(R.string.snaprkitfx_save_photo_questionmark);
 			builder.setView(view);
 			
-			builder.setNegativeButton(R.string.snaprkit_dont_save, new DialogInterface.OnClickListener() {
+			builder.setNegativeButton(R.string.snaprkitfx_dont_save, new DialogInterface.OnClickListener() {
 				@Override public void onClick(DialogInterface dialog, int which) {
 					SnaprImageEditFragmentActivity activity = (SnaprImageEditFragmentActivity) getActivity();
 					activity.finishActivity();
 					dialog.dismiss();
 				}
 			});
-			builder.setPositiveButton(R.string.snaprkit_save, new DialogInterface.OnClickListener() {
+			builder.setPositiveButton(R.string.snaprkitfx_save, new DialogInterface.OnClickListener() {
 				@Override public void onClick(DialogInterface dialog, int which) {
 					// TODO: show user text field to input file name (saved in gallery folder)
 					SnaprImageEditFragmentActivity activity = (SnaprImageEditFragmentActivity) getActivity();

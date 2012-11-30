@@ -11,7 +11,7 @@
 		android:layout_height="@dimen/thumbnail_size"
 		android:layout_alignParentTop="true"
 		android:layout_centerHorizontal="true"
-		android:contentDescription="@string/snaprkit_empty_content_description"
+		android:contentDescription="@string/snaprkitfx_empty_content_description"
 		android:padding="4dp"
 		android:scaleType="fitCenter" />
 
@@ -21,9 +21,9 @@
 		android:layout_height="@dimen/thumbnail_size"
 		android:layout_alignParentTop="true"
 		android:layout_centerHorizontal="true"
-		android:contentDescription="@string/snaprkit_empty_content_description"
+		android:contentDescription="@string/snaprkitfx_empty_content_description"
 		android:padding="4dp"
-		android:src="@drawable/snaprkit_locked_overlay"
+		android:src="@drawable/snaprkitfx_locked_overlay"
 		android:visibility="gone" />
 
 	<TextView
@@ -44,6 +44,6 @@
 		android:layout_height="@dimen/thumbnail_size"
 		android:layout_alignParentTop="true"
 		android:layout_centerHorizontal="true"
-		android:background="@drawable/snaprkit_img_thumbnail_overlay" />
+		android:background="@drawable/snaprkitfx_img_thumbnail_overlay" />
 
 </RelativeLayout>
