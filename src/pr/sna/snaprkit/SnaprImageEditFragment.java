@@ -8,6 +8,7 @@ import java.util.List;
 import nz.co.juliusspencer.android.JSAObjectUtil;
 import nz.co.juliusspencer.android.JSATimeUtil;
 import nz.co.juliusspencer.android.JSATuple;
+import pr.sna.snaprkit.SnaprEffect.EffectConfig;
 import pr.sna.snaprkit.SnaprFilterUtil.Filter;
 import pr.sna.snaprkit.SnaprFilterUtil.FilterPack;
 import pr.sna.snaprkit.SnaprFilterUtil.OnImageLoadListener;
@@ -164,7 +165,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		});
 		
 		// initialise the tabletop
-		mTabletop.setOnNonInteractionListener(this);
+		mTabletop.setTabletopListener(this);
 		mTabletop.setAutoPinGraphics(true);
 		
 		final String saveFile = extras.getString(SnaprImageEditFragmentActivity.EXTRA_OUTPUT);
@@ -359,6 +360,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		for (SnaprEffect effect : mEffects) {
 			View view = mFilterContainer.findViewWithTag(effect);
 			if (view == null) return;
+			view.setVisibility(effect.isVisible() ? View.VISIBLE : View.GONE);
 			view.findViewById(R.id.chosen_imageview).setSelected(effect.equals(mAppliedEffect));
 			view.findViewById(R.id.locked_overlay_imageview).setVisibility(effect.isLocked() ? View.VISIBLE : View.INVISIBLE);
 		}
@@ -370,9 +372,9 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	
 	private void updateViewEditedImageView() {
 		boolean isShowingStickers = mInteractionState.equals(InteractionState.SHOWING_STICKERS);
-		boolean isStickerUpToDate = mComposedBitmapInteractionCount == mTabletop.getInteractionCount();
-//		boolean isBaseBitmapEffectApplied = mBaseBitmapEffect != null && !mEffects.get(0).equals(mBaseBitmapEffect);
-		boolean preferComposed = !isShowingStickers || (/* isBaseBitmapEffectApplied && */ isStickerUpToDate); // show composed even with no effect applied
+		boolean areStickersUpToDate = mComposedBitmapInteractionCount == mTabletop.getInteractionCount();
+		boolean areAllGraphicsPinned = mTabletop.getPinnedGraphicCount() == mTabletop.getGraphicCount();
+		boolean preferComposed = !isShowingStickers || (areStickersUpToDate && areAllGraphicsPinned);
 		boolean showComposed = preferComposed && mComposedBitmap != null && mComposedBitmap != mBaseBitmap;
 		mEditedImageView.setImageBitmap(showComposed ? mComposedBitmap : mBaseBitmap);
 		mTabletop.setDrawGraphics(!showComposed);
@@ -439,6 +441,10 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	}
 	
 	@Override public void onNonInteraction(int interactionCount) {
+		composeBitmap(false);
+	}
+	
+	@Override public void onGraphicPinned() {
 		composeBitmap(false);
 	}
 	
@@ -567,9 +573,20 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			mFragmentListener.onHideProgressBlocking();
 			FilterPack filterPack = result.getA();
 			StickerPack stickerPack = result.getB();
+			if (!isAdded()) return;
 			
 			if (filterPack != null) {
-				for (Filter filter : filterPack.getFilters()) mEffects.add(new SnaprEffect(filter));
+				
+				Bundle extras = getActivity().getIntent().getExtras();
+				String configKey = SnaprImageEditFragmentActivity.EXTRA_EFFECT_CONFIGS;
+				@SuppressWarnings("unchecked") List<EffectConfig> configs = (List<EffectConfig>) extras.getSerializable(configKey);
+				
+				for (Filter filter : filterPack.getFilters()) {
+					EffectConfig config = configs != null ? findEffectConfig(configs, filter.getSlug()) : null;
+					if (config != null) mEffects.add(new SnaprEffect(filter, config));
+					else mEffects.add(new SnaprEffect(filter));
+				}
+				
 				if (mEffects.size() != 0) mAppliedEffect = mEffects.get(0);
 				initialiseEffectViews();
 				updateViewEffects();
@@ -580,7 +597,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 				initialiseStickerViews();
 			}
 
-			if (isAdded()) new LoadStickerFilterImagesAsyncTask(getActivity()).execute();
+			new LoadStickerFilterImagesAsyncTask(getActivity()).execute();
 			
 			updateView();
 		}
@@ -650,6 +667,16 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		void onCancel();
 	}
 
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	 * find effect config
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+	private static EffectConfig findEffectConfig(List<EffectConfig> configs, String slug) {
+		for (EffectConfig config : configs)
+			if (config.mSlug.equals(slug)) return config;
+		return null;
+	}
+	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * JNI library loader
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */

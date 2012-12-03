@@ -1,9 +1,12 @@
 package pr.sna.snaprkit;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 
 import nz.co.juliusspencer.android.JSAProgressDialogFragment;
+import pr.sna.snaprkit.SnaprEffect.EffectConfig;
 import pr.sna.snaprkit.SnaprImageEditFragment.FragmentListener;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -54,6 +57,8 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 	
 	public static final String EXTRA_FILTER_PACK_PATH = "EXTRA_FILTER_PACK_PATH";
 	public static final String EXTRA_STICKER_PACK_PATH = "EXTRA_STICKER_PACK_PATH";
+	
+	public static final String EXTRA_EFFECT_CONFIGS = "EXTRA_EFFECT_CONFIGS";
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * constants: analytics
@@ -106,6 +111,12 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		if (builder.mJustTookPhoto) intent.putExtra(EXTRA_TOOK_PHOTO_TIMESTAMP, builder.mJustTookPhotoTimestamp);
 		if (builder.mFilterPackPath != null) intent.putExtra(EXTRA_FILTER_PACK_PATH, builder.mFilterPackPath);
 		if (builder.mStickerPackPath != null) intent.putExtra(EXTRA_STICKER_PACK_PATH, builder.mStickerPackPath);
+		
+		Serializable sEffectConfigs = builder.mEffectConfigs == null ? null : 
+			builder.mEffectConfigs instanceof Serializable ? (Serializable) builder.mEffectConfigs : 
+			new ArrayList<EffectConfig>(builder.mEffectConfigs);
+		if (sEffectConfigs != null) intent.putExtra(EXTRA_EFFECT_CONFIGS, sEffectConfigs);
+		
 		return intent;
 	}
 	
@@ -211,6 +222,7 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		private final long mJustTookPhotoTimestamp;
 		private String mFilterPackPath;
 		private String mStickerPackPath;
+		private List<EffectConfig> mEffectConfigs;
 		
 		public Builder(File file, File outputFile) {
 			this(file, outputFile, false, -1);
@@ -230,6 +242,11 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		
 		public Builder setStickerPackPath(String path) {
 			mStickerPackPath = path;
+			return this;
+		}
+		
+		public Builder setEffectConfigs(List<EffectConfig> configs) {
+			mEffectConfigs = configs;
 			return this;
 		}
 	}

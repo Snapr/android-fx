@@ -147,6 +147,19 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * pinned graphic count
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	public int getPinnedGraphicCount() {
+		int count = 0;
+		for (TabletopGraphic graphic : mBackgroundGraphics)
+			if (graphic.isPinned()) count = count + 1;
+		for (TabletopGraphic graphic : mForegroundGraphics)
+			if (graphic.isPinned()) count = count + 1;
+		return count;
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * interaction count
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
@@ -158,7 +171,7 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	 * non interaction listener
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
-	public void setOnNonInteractionListener(TabletopListener listener) {
+	public void setTabletopListener(TabletopListener listener) {
 		mTabletopListener = listener;
 	}
 	
@@ -572,6 +585,7 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	public static interface TabletopListener {
 		void onInteraction(int interactionCount);
 		void onNonInteraction(int interactionCount);
+		void onGraphicPinned();
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

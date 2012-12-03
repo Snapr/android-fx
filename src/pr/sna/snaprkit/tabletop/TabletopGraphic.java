@@ -232,6 +232,14 @@ public class TabletopGraphic implements Cloneable {
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * is pinned
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	public boolean isPinned() {
+		return mState.equals(State.PINNED);
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * state
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
