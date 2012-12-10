@@ -117,10 +117,10 @@
 			android:layout_weight="1" />
 
 		<Button
-			android:id="@+id/sticker_button"
+			android:id="@+id/filter_button"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:background="@drawable/snaprkitfx_btn_sticker"
+			android:background="@drawable/snaprkitfx_btn_filter"
 			android:contentDescription="@string/snaprkitfx_empty_content_description" />
 
 		<View
@@ -128,10 +128,10 @@
 			android:layout_height="0dp" />
 
 		<Button
-			android:id="@+id/filter_button"
+			android:id="@+id/sticker_button"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:background="@drawable/snaprkitfx_btn_filter"
+			android:background="@drawable/snaprkitfx_btn_sticker"
 			android:contentDescription="@string/snaprkitfx_empty_content_description" />
 
 		<View

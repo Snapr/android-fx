@@ -98,6 +98,11 @@ public abstract class SnaprFilterUtil {
 			pack.mDescription = json.getString("description");
 			pack.mThumbnail = loadImages ? JsonUtil.loadAssetBitmap(context, folder, "thumb.png", "thumb@2x.png") : null;
 			pack.mFilters = new ArrayList<SnaprFilterUtil.Filter>();
+			
+			// add in the "original" filter
+			pack.mFilters.add(constructOriginalFilter(pack, context, folder));
+			
+			// add in all the filters defined in json
 			for (int i = 0; i < filters.length(); i++) {
 				String slug = ((JSONObject) filters.get(i)).getString("slug");
 				pack.mFilters.add(Filter.parse(context, folder, slug, loadImages));
@@ -135,6 +140,16 @@ public abstract class SnaprFilterUtil {
 			if (mThumbnail == null) mThumbnail = JsonUtil.loadAssetBitmap(context, folder, "thumb.png", "thumb@2x.png");
 			if (mThumbnail != null && listener != null) listener.onImageLoad(this, mThumbnail);
 			for (Filter filter : mFilters) filter.loadImages(context, folder, listener);
+		}
+		
+		private static Filter constructOriginalFilter(FilterPack pack, Context context, String folder) throws IOException {
+			Filter filter = new Filter();
+			filter.mSlug = "original";
+			filter.mThumbnail = pack.mThumbnail != null ? pack.mThumbnail : JsonUtil.loadAssetBitmap(context, folder, "original-thumb.png", "original-thumb@2x.png", false);
+			if (filter.mThumbnail == null) pack.mThumbnail = JsonUtil.loadAssetBitmap(context, folder, "thumb.png", "thumb@2x.png", false);
+			filter.mName = context.getString(R.string.snaprkitfx_original);
+			filter.mLayers = new ArrayList<SnaprFilterUtil.Layer>();
+			return filter;
 		}
 	}
 

@@ -156,7 +156,9 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		if (fragment == null) return;
 		if (!(fragment instanceof DialogFragment)) return;
 		DialogFragment df = (DialogFragment) fragment;
-		df.dismiss();
+		try {
+			df.dismiss();
+		} catch (Exception exception) { /* do nothing */ }
 	}
 	
 	@Override public void onShowProgressUnblocking() {

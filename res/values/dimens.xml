@@ -5,4 +5,5 @@
     <dimen name="message_title_text_size">36sp</dimen>
     <dimen name="message_text_size">16sp</dimen>
     <dimen name="thumbnail_size">80dp</dimen>
+    <dimen name="thumbnail_text_size">12sp</dimen>
 </resources>

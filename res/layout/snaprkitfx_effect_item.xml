@@ -35,8 +35,8 @@
 		android:gravity="center_horizontal"
 		android:maxLines="1"
 		android:singleLine="true"
-		android:textAppearance="?android:attr/textAppearanceSmall"
-		android:textColor="@android:color/white" />
+		android:textColor="@android:color/white"
+		android:textSize="@dimen/thumbnail_text_size" />
 
 	<View
 		android:id="@+id/chosen_imageview"

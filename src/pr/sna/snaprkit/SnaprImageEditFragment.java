@@ -50,7 +50,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private int mComposedBitmapInteractionCount;			// the interaction count of the tabletop when the composed bitmap was created
 	
 	private SnaprEffect mAppliedEffect;
-	private InteractionState mInteractionState = InteractionState.SHOWING_STICKERS;	// the current state of the fragment interaction
+	private InteractionState mInteractionState = InteractionState.SHOWING_FILTERS;	// the current state of the fragment interaction
 	
 	private String mFilterPackLocation = FILTER_PACK_PATH_DEFAULT;		// the location (under assets) where the filter packs will be loaded from
 	private String mStickerPackLocation = STICKER_PACK_PATH_DEFAULT;	// the location (under assets) where the sticker packs will be loaded from
@@ -339,7 +339,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mMessageLayout.setVisibility(isLocked ? View.VISIBLE : View.INVISIBLE);
 		
 		// update the next button
-		boolean isNextButton = hasStickers && hasFilters && !isShowingFilters;
+		boolean isNextButton = hasStickers && hasFilters && isShowingFilters;
 		int resourceId = isNextButton ? R.drawable.snaprkitfx_btn_next_normal : R.drawable.snaprkitfx_btn_tick;
 		mNextButton.setBackgroundResource(resourceId);
 		mNextButton.setEnabled(isNextButton || !isLocked);
@@ -385,11 +385,11 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 	private void onNextButtonClick() {
-		boolean isShowingStickers = mInteractionState.equals(InteractionState.SHOWING_STICKERS);
+		boolean isShowingFilters = mInteractionState.equals(InteractionState.SHOWING_FILTERS);
 		boolean hasStickers = mStickers.size() != 0;
 		boolean hasFilters = mEffects.size() != 0;
 		
-		if (hasStickers && hasFilters && isShowingStickers) mInteractionState = InteractionState.SHOWING_FILTERS; // show the filters
+		if (hasStickers && hasFilters && isShowingFilters) mInteractionState = InteractionState.SHOWING_STICKERS; // show the filters
 		else new SaveEditedBitmapToFileAsyncTask().execute(); // save bitmap and change file		
 		updateViewEditedImageView();
 		updateView();
@@ -535,7 +535,12 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			mFragmentListener.onShowProgressBlocking(getString(R.string.snaprkitfx_saving_));
 			mBaseBitmap = null; // null bitmaps to release unused memory
 			mComposedBitmap = null;
+			mBaseBitmapEffect = null; // null effects to release unused memory
+			mAppliedEffect = null;
+			mEffects.clear(); // remove all references to effects and stickers
+			mStickers.clear();
 			updateViewEditedImageView();
+			mTabletop.setDrawGraphics(false);
 			mTabletop.setVisibility(View.GONE);
 			System.gc();
 		}
@@ -599,6 +604,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 
 			new LoadStickerFilterImagesAsyncTask(getActivity()).execute();
 			
+			mInteractionState = filterPack != null ? InteractionState.SHOWING_FILTERS : InteractionState.SHOWING_STICKERS;
+			updateViewEditedImageView();
 			updateView();
 		}
 	}

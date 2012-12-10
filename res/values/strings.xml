@@ -16,5 +16,6 @@
     <string name="snaprkitfx_save_photo_questionmark">Save photo?</string>
     <string name="snaprkitfx_save">Save</string>
     <string name="snaprkitfx_dont_save">Don\'t save</string>
+    <string name="snaprkitfx_original">Original</string> 
     
 </resources>

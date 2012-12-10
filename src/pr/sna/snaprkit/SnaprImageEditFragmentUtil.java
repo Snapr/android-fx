@@ -78,44 +78,71 @@ public class SnaprImageEditFragmentUtil {
 
 			try {
 
-				// Make sure the base output directory exists
+				// ensure the base output directory exists
 				File baseDir = file.getParentFile();
 				baseDir.mkdirs();
 
-				// Make the bitmap
-				Bitmap b = null;
-
-				// Fetch a larger bitmap
-				int width = SnaprPhotoHelper.getMaxImageWidth(mContext);
-				int scale = JSAImageUtil.getLoadImageScale(new File(mOriginalFilePath), width, width);
+				// calculate the maximum number of bytes the bitmap can be
+				ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+				long deviceMemoryBytes = am.getMemoryClass() * JSAFileUtil.BYTES_PER_MB;
+				
+				// we allow a small number of concurrent images to fit within memory
+				long maxImageBytes = (long) (deviceMemoryBytes * IMAGE_MEMORY_PERCENTAGE / 100f) / MAX_CONCURRENT_IMAGES_IN_MEMORY;
+				
+				// calculate the maximum width a square image can be to fit within memory constraints
+				float rawMaxMemoryWidth = FloatMath.sqrt(maxImageBytes / 4); // approximate
+				
+				// round the width down to the nearest hundred pixels (to give a nice even number of the final output)
+				int maxMemoryWidth = (int) (FloatMath.floor(rawMaxMemoryWidth / 100f)) * 100;
+				
+				// retrieve the dimensions of the original file
+				JSATuple<Integer, Integer> dimens = JSAImageUtil.getBitmapImageDimensions(new File(mOriginalFilePath));
+				
+				// ensure the maximum width doesn't exceed the size of the original file
+				int maxWidth = Math.min(Math.min(dimens.getA(), dimens.getB()), maxMemoryWidth);
+				
+				// construct the options to load the bitmap into memory (slightly larger than required)
 				Options opts = new Options();
+				opts.inSampleSize = JSAImageUtil.getLoadLargerImageScale(new File(mOriginalFilePath), maxWidth, maxWidth);
+				opts.inDither = true;
 				opts.inPreferredConfig = PREFERRED_BITMAP_CONFIG;
-				opts.inSampleSize = scale;
 				if (Build.VERSION.SDK_INT >= 11) opts.inMutable = true;
-				b = JSAImageUtil.loadImageFile(new File(mOriginalFilePath), opts);
-				b = SnaprPhotoHelper.cropBitmap(b, true);
 				
-				b = mTabletop.drawOnBitmap(b, true);
+				// load the bitmap into memory
+				Bitmap bitmap = JSAImageUtil.loadImageFile(new File(mOriginalFilePath), opts);
 				
-				if (mEffect != null) mEffect.getFilter().apply(mContext.getApplicationContext(), b);
+				// scale down the bitmap to fit within the memory restriction
+				bitmap = Bitmap.createScaledBitmap(bitmap, maxWidth, maxWidth, true);
 				
-				FileOutputStream fos = new FileOutputStream(file.getAbsolutePath());
-				b.compress(CompressFormat.JPEG, 100, fos);
+				// crop the bitmap to square
+				bitmap = SnaprPhotoHelper.cropBitmap(bitmap, true);
 
-				// copy the exif data from the source to the destination
-				if (!mOriginalFilePath.equals(mSaveFilePath)) CameraUtil.copyExifData(new File(mOriginalFilePath), new File(mSaveFilePath));
+				// draw the stickers on the bitmap
+				bitmap = mTabletop.drawOnBitmap(bitmap, true);
 				
-				// Tell the media scanner about the new file so that it is
-				// immediately available to the user.
-				MediaScannerConnection.scanFile(
-						SnaprKitApplication.getInstance(),
-						new String[] { file.toString() }, null, null);
+				// apply the effect to the bitmap (if required)
+				if (mEffect != null) mEffect.getFilter().apply(mContext.getApplicationContext(), bitmap);
 				
-			} catch (Exception e) {
-				e.printStackTrace();
+				// save the bitmap to file
+				FileOutputStream fos = new FileOutputStream(file.getAbsolutePath());
+				bitmap.compress(CompressFormat.JPEG, 100, fos);
+
+				// tell the media scanner about the new file so that it is immediately available to the user.
+				MediaScannerConnection.scanFile(SnaprKitApplication.getInstance(), new String[] { file.toString() }, null, null);
+				
+			} catch (Exception exception) {
+				exception.printStackTrace();
 				return new JSATuple<File, Boolean>(file, false);
 			}
 
+			try {
+				// copy the exif data from the source to the destination
+				if (!mOriginalFilePath.equals(mSaveFilePath)) CameraUtil.copyExifData(new File(mOriginalFilePath), new File(mSaveFilePath));
+			} catch (Exception exception) {
+				exception.printStackTrace();
+			}
+
+			
 			return new JSATuple<File, Boolean>(file, true);
 		}
 	}
