@@ -144,7 +144,7 @@ public abstract class SnaprFilterUtil {
 		
 		private static Filter constructOriginalFilter(FilterPack pack, Context context, String folder) throws IOException {
 			Filter filter = new Filter();
-			filter.mSlug = "original";
+			filter.mSlug = context.getString(R.string.snaprkitfx_original);
 			filter.mThumbnail = pack.mThumbnail != null ? pack.mThumbnail : JsonUtil.loadAssetBitmap(context, folder, "original-thumb.png", "original-thumb@2x.png", false);
 			if (filter.mThumbnail == null) pack.mThumbnail = JsonUtil.loadAssetBitmap(context, folder, "thumb.png", "thumb@2x.png", false);
 			filter.mName = context.getString(R.string.snaprkitfx_original);

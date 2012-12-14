@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+
+    <string name="snaprkitfx_empty_content_description"></string>
+    <string name="snaprkitfx_please_wait">Aguarde por favor</string>
+    
+    <!-- FX Module: Editor -->
+    <string name="snaprkitfx_applying">A aplicar…</string>
+    <string name="snaprkitfx_saving_">A salvar…</string>
+    <string name="snaprkitfx_problem_saving_check_storage">Problema a salvar. Por favor verifiquw a memoria do seu telefone.</string>
+    <string name="snaprkitfx_problem_applying_effect">Problema ao aplicar efeito. Desculpe, o problema sera resolvido em breve.</string>
+    <string name="snaprkitfx_unable_to_load_image_try_another_">Nao foi possivel carregar a foto. Tente outra foto.</string>
+    <string name="snaprkitfx_loading">Carregamento…</string>
+    <string name="snaprkitfx_hold_on">Aguarde</string>
+    <string name="snaprkitfx_loading_sticker_please_wait">A carregar decalque. Por favor aguarde.</string>
+    <string name="snaprkitfx_save_photo_questionmark">Salvar Foto?</string>
+    <string name="snaprkitfx_save">Salvar</string>
+    <string name="snaprkitfx_dont_save">Não guardar</string>
+    <string name="snaprkitfx_original">Original</string>
+    
+</resources>
