@@ -11,6 +11,7 @@ import java.util.List;
 
 import nz.co.juliusspencer.android.JSAFileUtil;
 import nz.co.juliusspencer.android.JSAImageUtil;
+import nz.co.juliusspencer.android.JSAMathUtil;
 import nz.co.juliusspencer.android.JSATuple;
 import pr.sna.snaprkit.tabletop.TabletopSurfaceView;
 import pr.sna.snaprkit.util.CameraUtil;
@@ -52,6 +53,7 @@ public class SnaprImageEditFragmentUtil {
 	public static final int MAX_CONCURRENT_IMAGES_IN_MEMORY = 5; 	// the maximum number of raw images allows within the allocated memory
 	public static final float IMAGE_MEMORY_PERCENTAGE = 60f; 		// the percentage of total memory raw images can occupy
 	public static final float STICKER_MEMORY_PERCENTAGE = 20f; 		// the percentage of total memory raw sticker images can occupy
+	public static final int MAX_FINAL_IMAGE_WIDTH = 900; 			// the maximum width of the final rendered image
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * save edited bitmap to file async task
@@ -63,6 +65,8 @@ public class SnaprImageEditFragmentUtil {
 		private final String mSaveFilePath;
 		private final SnaprEffect mEffect;
 		private final TabletopSurfaceView mTabletop;
+		private final int mTabletopWidth;
+		private final int mTabletopHeight;
 		
 		public SaveEditedBitmapToFileAsyncTask(Context context, String originalFilePath, String saveFilenPath, SnaprEffect effect, TabletopSurfaceView tabletop) {
 			if (context == null || saveFilenPath == null || tabletop == null) throw new IllegalArgumentException();
@@ -71,6 +75,8 @@ public class SnaprImageEditFragmentUtil {
 			mSaveFilePath = saveFilenPath;
 			mEffect = effect;
 			mTabletop = tabletop;
+			mTabletopWidth = tabletop.getWidth();
+			mTabletopHeight = tabletop.getHeight();
 		}
 		
 		@SuppressLint("NewApi") @Override protected JSATuple<File, Boolean> doInBackground(Void... params) {
@@ -99,11 +105,11 @@ public class SnaprImageEditFragmentUtil {
 				JSATuple<Integer, Integer> dimens = JSAImageUtil.getBitmapImageDimensions(new File(mOriginalFilePath));
 				
 				// ensure the maximum width doesn't exceed the size of the original file
-				int maxWidth = Math.min(Math.min(dimens.getA(), dimens.getB()), maxMemoryWidth);
+				int maxWidth = JSAMathUtil.min(dimens.getA(), dimens.getB(), maxMemoryWidth, MAX_FINAL_IMAGE_WIDTH);
 				
 				// construct the options to load the bitmap into memory (slightly larger than required)
 				Options opts = new Options();
-				opts.inSampleSize = JSAImageUtil.getLoadLargerImageScale(new File(mOriginalFilePath), maxWidth, maxWidth);
+				opts.inSampleSize = JSAImageUtil.getLoadImageScale(new File(mOriginalFilePath), maxWidth, maxWidth, false);
 				opts.inDither = true;
 				opts.inPreferredConfig = PREFERRED_BITMAP_CONFIG;
 				if (Build.VERSION.SDK_INT >= 11) opts.inMutable = true;
@@ -111,14 +117,11 @@ public class SnaprImageEditFragmentUtil {
 				// load the bitmap into memory
 				Bitmap bitmap = JSAImageUtil.loadImageFile(new File(mOriginalFilePath), opts);
 				
-				// scale down the bitmap to fit within the memory restriction
-				bitmap = Bitmap.createScaledBitmap(bitmap, maxWidth, maxWidth, true);
-				
 				// crop the bitmap to square
 				bitmap = SnaprPhotoHelper.cropBitmap(bitmap, true);
 
 				// draw the stickers on the bitmap
-				bitmap = mTabletop.drawOnBitmap(bitmap, true);
+				bitmap = mTabletop.drawOnBitmap(bitmap, true, mTabletopWidth, mTabletopHeight);
 				
 				// apply the effect to the bitmap (if required)
 				if (mEffect != null) mEffect.getFilter().apply(mContext.getApplicationContext(), bitmap);
@@ -211,7 +214,7 @@ public class SnaprImageEditFragmentUtil {
 		@SuppressWarnings("deprecation") int length = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getWidth();
 		
 		Options opts = new Options();
-		opts.inSampleSize = JSAImageUtil.getLoadLargerImageScale(new File(originalFilePath), length, length);
+		opts.inSampleSize = JSAImageUtil.getLoadLargerImageScale(new File(originalFilePath), length, length, false);
 		opts.inDither = true;
 		opts.inPreferredConfig = PREFERRED_BITMAP_CONFIG;
 		if (Build.VERSION.SDK_INT >= 11) opts.inMutable = true;

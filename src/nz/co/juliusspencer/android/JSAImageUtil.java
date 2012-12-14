@@ -20,15 +20,25 @@ public class JSAImageUtil {
 	
 	/** {@see getLoadImageScale(int, int, int, int)} */
 	public static int getLoadImageScale(String path, int maxWidth, int maxHeight) {
+		return getLoadImageScale(path, maxWidth, maxHeight, true);
+	}
+	
+	/** {@see getLoadImageScale(int, int, int, int)} */
+	public static int getLoadImageScale(String path, int maxWidth, int maxHeight, boolean powerOfTwo) {
 		if (path == null) throw new IllegalArgumentException();
-		return getLoadImageScale(new File(path), maxWidth, maxHeight);
+		return getLoadImageScale(new File(path), maxWidth, maxHeight, powerOfTwo);
 	}
 	
 	/** {@see getLoadImageScale(int, int, int, int)} */
 	public static int getLoadImageScale(File file, int maxWidth, int maxHeight) {
+		return getLoadImageScale(file, maxWidth, maxHeight, true);
+	}
+	
+	/** {@see getLoadImageScale(int, int, int, int)} */
+	public static int getLoadImageScale(File file, int maxWidth, int maxHeight, boolean powerOfTwo) {
 		if (file == null) throw new IllegalArgumentException();
 		JSATuple<Integer, Integer> dimensions = getBitmapImageDimensions(file);
-		return getLoadImageScale(dimensions.getA(), dimensions.getB(), maxWidth, maxHeight);
+		return getLoadImageScale(dimensions.getA(), dimensions.getB(), maxWidth, maxHeight, powerOfTwo);
 	}
 	
 
@@ -40,10 +50,17 @@ public class JSAImageUtil {
 	 * This method is useful to ensure the image does not exceed the virtual machine bitmap cache size (for example, displaying a camera image on screen).
 	 */
 	public static int getLoadImageScale(int imageWidth, int imageHeight, int maxWidth, int maxHeight) {
+		return getLoadImageScale(imageWidth, imageHeight, maxWidth, maxHeight, true);
+	}
+	
+	public static int getLoadImageScale(int imageWidth, int imageHeight, int maxWidth, int maxHeight, boolean powerOfTwo) {
 		if (maxWidth <= 0 || maxHeight <= 0) throw new InvalidParameterException("maxWidth and maxHeight must be positive");
 
 		// return the image unscaled if the image width and height are less than requested
 		if (imageWidth <= maxWidth && imageHeight <= maxHeight) return 1;
+		
+		// calculate and return the scale (using rounded integer values)
+		if (!powerOfTwo) return (int) Math.ceil(Math.max(imageWidth / (double) maxWidth, imageHeight / (double) maxHeight));		
 		
 		// calculate the desired scale (using powers of two to result in a faster, more accurate subsampling)
 		double scaleValue = Math.min(maxWidth / (double) imageWidth, maxHeight / (double) imageHeight);
@@ -59,15 +76,25 @@ public class JSAImageUtil {
 	
 	/** {@see getLoadLargerImageScale(File, int, int)} */
 	public static int getLoadLargerImageScale(String path, int minWidth, int minHeight) {
+		return getLoadLargerImageScale(path, minWidth, minHeight, true);
+	}
+	
+	/** {@see getLoadLargerImageScale(File, int, int)} */
+	public static int getLoadLargerImageScale(String path, int minWidth, int minHeight, boolean powerOfTwo) {
 		if (path == null) throw new IllegalArgumentException();
-		return getLoadLargerImageScale(new File(path), minWidth, minHeight);
+		return getLoadLargerImageScale(new File(path), minWidth, minHeight, powerOfTwo);
 	}
 	
 	/** {@see getLoadLargerImageScale(File, int, int)} */
 	public static int getLoadLargerImageScale(File file, int minWidth, int minHeight) {
+		return getLoadLargerImageScale(file, minWidth, minHeight, true);
+	}
+	
+	/** {@see getLoadLargerImageScale(File, int, int)} */
+	public static int getLoadLargerImageScale(File file, int minWidth, int minHeight, boolean powerOfTwo) {
 		if (file == null) throw new IllegalArgumentException();
 		JSATuple<Integer, Integer> dimensions = getBitmapImageDimensions(file);
-		return getLoadLargerImageScale(dimensions.getA(), dimensions.getB(), minWidth, minHeight);
+		return getLoadLargerImageScale(dimensions.getA(), dimensions.getB(), minWidth, minHeight, powerOfTwo);
 	}
 	
 	/** 
@@ -82,10 +109,17 @@ public class JSAImageUtil {
 	 * method, this method will ensure the resulting image does not require upscaling to fit the requested bounds.
 	 */
 	public static int getLoadLargerImageScale(int imageWidth, int imageHeight, int minWidth, int minHeight) {
+		return getLoadLargerImageScale(imageWidth, imageHeight, minWidth, minHeight, true);
+	}
+	
+	public static int getLoadLargerImageScale(int imageWidth, int imageHeight, int minWidth, int minHeight, boolean powerOfTwo) {
 		if (minWidth <= 0 || minHeight <= 0) throw new InvalidParameterException("minWidth and minHeight must be positive");
 		
 		// return the image unscaled if the image width and height are less than requested
 		if (imageWidth <= minWidth && imageHeight <= minHeight) return 1;
+		
+		// calculate and return the scale (using rounded integer values)
+		if (!powerOfTwo) return (int) Math.floor(Math.min(imageWidth / (double) minWidth, imageHeight / (double) minHeight));
 		
 		// calculate and return the image at the requested scale (using powers of two to result in a faster, more accurate subsampling)
 		double scaleValue = Math.max(minWidth / (double) imageWidth, minHeight / (double) imageHeight);

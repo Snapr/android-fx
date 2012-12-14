@@ -8,12 +8,14 @@ import java.util.List;
 import nz.co.juliusspencer.android.JSAProgressDialogFragment;
 import pr.sna.snaprkit.SnaprEffect.EffectConfig;
 import pr.sna.snaprkit.SnaprImageEditFragment.FragmentListener;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -72,11 +74,13 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 	 * on create
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-    @Override public void onCreate(Bundle savedInstanceState) {
+    @SuppressLint("NewApi") @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        requestWindowFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
         setContentView(R.layout.snaprkitfx_edit_layout);
         
+        if (Build.VERSION.SDK_INT >= 11 && getActionBar() != null) getActionBar().hide();
 		SnaprImageEditFragment fragment = (SnaprImageEditFragment) getSupportFragmentManager().findFragmentById(R.id.fragment);
 		fragment.setFragmentListener(this);
     }

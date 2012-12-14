@@ -12,4 +12,14 @@ public class JSAMathUtil {
 		return (float) (degrees * Math.PI / 180);
 	}
 	
+	/** Return the minimum value from the given values. */
+	public static int min(int... values) {
+		if (values.length == 0) throw new IllegalArgumentException();
+		if (values.length == 1) return values[0];
+		int min = values[0];
+		for (int i = 0; i < values.length; i++)
+			min = Math.min(min, values[i]);
+		return min;
+	}
+
 }

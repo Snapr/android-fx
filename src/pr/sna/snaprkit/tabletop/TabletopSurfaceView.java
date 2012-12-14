@@ -488,6 +488,8 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 
 	@Override public void surfaceDestroyed(SurfaceHolder holder) {
 		if (!mThread.isRunning()) return;
+		mDrawGraphics = false;					// clear the canvas before destruction
+		lockAndDrawCanvas(this, holder);
 		mThread.setRunning(false);
 		mThread = null;
 	}
@@ -500,10 +502,12 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 
 	/* package */ class TabletopThread extends Thread {
 		private final TabletopSurfaceView mView;
+		private final SurfaceHolder mHolder;
 		private boolean mIsRunning;
 
 		public TabletopThread(TabletopSurfaceView view) {
 			mView = view;
+			mHolder = view.getHolder();
 		}
 
 		public boolean isRunning() {
@@ -515,19 +519,26 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		}
 
 		@Override public void run() {
-			SurfaceHolder holder = mView.getHolder();
-			Canvas canvas = null;
 			while (mIsRunning) {
-				try {
-					canvas = holder.lockCanvas(null);
-					mView.onDraw(canvas);
-				} finally {
-					if (canvas != null) holder.unlockCanvasAndPost(canvas);
-				}
+				lockAndDrawCanvas(mView, mHolder);
 			}
 		}
 	}
 
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * lock and draw canvas
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	private void lockAndDrawCanvas(TabletopSurfaceView view, SurfaceHolder holder) {
+		Canvas canvas = null;
+		try {
+			canvas = holder.lockCanvas(null);
+			view.onDraw(canvas);
+		} finally {
+			if (canvas != null) holder.unlockCanvasAndPost(canvas);
+		}
+	}
+	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * load bitmap
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -550,6 +561,10 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	 * Return the modified bitmap.
 	 */
 	public synchronized Bitmap drawOnBitmap(Bitmap bitmap, boolean recycle) {
+		return drawOnBitmap(bitmap, recycle, getWidth(), getHeight());
+	}
+	
+	public synchronized Bitmap drawOnBitmap(Bitmap bitmap, boolean recycle, int surfaceWidth, int surfaceHeight) {
 		if (bitmap == null) throw new IllegalArgumentException();
 		
 		// copy and and recycle the bitmap if not mutable
@@ -561,8 +576,8 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		
 		// cache values used during drawing
 		float scale = Math.min(getWidth() / (float) bitmap.getWidth(), getHeight() / (float) bitmap.getHeight());
-		float offsetX = -(getWidth() - bitmap.getWidth() * scale) / 2;
-		float offsetY = -(getHeight() - bitmap.getHeight() * scale) / 2;
+		float offsetX = -(surfaceWidth - bitmap.getWidth() * scale) / 2;
+		float offsetY = -(surfaceHeight - bitmap.getHeight() * scale) / 2;
 		Canvas canvas = new BitmapCanvas(bitmap);
 		float inverseScale = 1 / scale;
 		

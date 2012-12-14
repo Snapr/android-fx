@@ -344,8 +344,9 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mNextButton.setBackgroundResource(resourceId);
 		mNextButton.setEnabled(isNextButton || !isLocked);
 		
-		// show or hide the tabletop
-		mTabletop.setVisibility(isShowingFilters ? View.GONE : View.VISIBLE);
+		// show or hide the tabletop (prevent showing the tabletop when rendering the final image)
+		boolean isImageVisible = mEditedImageView.getVisibility() == View.VISIBLE;
+		mTabletop.setVisibility(isShowingFilters || !isImageVisible ? View.GONE : View.VISIBLE);
 		
 		// show or hide the indeterminate progress
 		if (mComposeBitmapAsyncTask != null && isShowingFilters) mFragmentListener.onShowProgressUnblocking();
@@ -532,6 +533,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 
 		@Override protected void onPreExecute() {
 			super.onPreExecute();
+			mTabletop.setDrawGraphics(false);
 			mFragmentListener.onShowProgressBlocking(getString(R.string.snaprkitfx_saving_));
 			mBaseBitmap = null; // null bitmaps to release unused memory
 			mComposedBitmap = null;
@@ -540,7 +542,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			mEffects.clear(); // remove all references to effects and stickers
 			mStickers.clear();
 			updateViewEditedImageView();
-			mTabletop.setDrawGraphics(false);
+			mEditedImageView.setVisibility(View.GONE);
 			mTabletop.setVisibility(View.GONE);
 			System.gc();
 		}
