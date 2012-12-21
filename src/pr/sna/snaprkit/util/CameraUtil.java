@@ -125,7 +125,7 @@ public class CameraUtil {
 					TiffOutputField sourceField = (TiffOutputField) sourceFields.get(j);
 					
 					// Check exclusion list
-					if (excludedFields.contains(sourceField.tagInfo))
+					if (excludedFields != null && excludedFields.contains(sourceField.tagInfo))
 					{
 						destinationDirectory.removeField(sourceField.tagInfo);
 						continue;

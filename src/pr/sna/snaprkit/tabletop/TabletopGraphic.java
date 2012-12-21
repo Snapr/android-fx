@@ -44,6 +44,8 @@ public class TabletopGraphic implements Cloneable {
 	private final Paint mBitmapPaint;		// the paint used to draw the bitmap (reused for optimisation)
 	private final Path mBoundingBoxPath;	// the path used to draw the bounding box (reused for optimisation)
 	
+	private boolean mForceBoundingBoxDraw;	// whether or not the force the graphic to draw the bounding box (regardless of state)
+	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * constants (pseudo constants)
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -150,6 +152,18 @@ public class TabletopGraphic implements Cloneable {
 	
 	public void setReactivatePinned(boolean reactivate) {
 		mReactivatePinned = reactivate;
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * force bounding box draw
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	public boolean getForceBoundingBoxDraw() {
+		return mForceBoundingBoxDraw;
+	}
+	
+	public void setForceBoundingBoxDraw(boolean force) {
+		mForceBoundingBoxDraw = force;
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -294,7 +308,8 @@ public class TabletopGraphic implements Cloneable {
 		mBoundingBoxPath.lineTo(mGeometryHelper.getCorner(0, mCenter).x, mGeometryHelper.getCorner(0, mCenter).y); 		// top left (again)
 		
 		// draw the bounding box
-		if (!isDeleted && !isDisabled && !isPinned) canvas.drawPath(mBoundingBoxPath, mBoundingBoxPaint);
+		boolean forceBoundingBoxDraw = mForceBoundingBoxDraw && !(context instanceof ScaledDrawContext);
+		if (!isDeleted && !isDisabled && !isPinned || forceBoundingBoxDraw) canvas.drawPath(mBoundingBoxPath, mBoundingBoxPaint);
 		
 		// draw the rotation button
 		PointF point = mGeometryHelper.getCorner(2, mCenter);

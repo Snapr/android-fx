@@ -80,6 +80,7 @@ public class SnaprImageEditFragmentUtil {
 		}
 		
 		@SuppressLint("NewApi") @Override protected JSATuple<File, Boolean> doInBackground(Void... params) {
+			Thread.currentThread().setName(Thread.currentThread().getName() + " [" + getClass().getSimpleName() + "]");
 			File file = new File(mSaveFilePath);
 
 			try {

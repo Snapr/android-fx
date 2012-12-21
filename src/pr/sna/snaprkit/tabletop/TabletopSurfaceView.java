@@ -8,6 +8,7 @@ import java.util.List;
 
 import nz.co.juliusspencer.android.JSAFileUtil;
 import nz.co.juliusspencer.android.JSAMotionEventUtil;
+import pr.sna.snaprkit.R;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
@@ -19,6 +20,7 @@ import android.graphics.PixelFormat;
 import android.graphics.PointF;
 import android.graphics.PorterDuff;
 import android.graphics.RectF;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -66,6 +68,13 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	private boolean mAutoPinGraphics;				// whether or not only the most recently interacted graphic should be active (all others pinned)
 	private boolean mDrawGraphics;					// whether or not to draw graphics on the tabletop (during the update loop)
 	
+	private boolean mShowSpinner;					// whether or not to show the spinner on the tabletop
+	private Drawable mSpinnerDrawable;				// the drawable used to draw the spinner on the tabletop
+	private long mSpinnerStartTime;					// the system time (in milliseconds) the spinner was most recently started (used to control animation)
+	private float mSpinnerRotationSpeedFactor;		// the factor by which to control the rotation speed of the spinner
+	
+	private boolean mForceGraphicsBoundingBoxDraw;							// whether or not to force the graphics to draw their bounding boxes
+	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * constants
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -107,6 +116,10 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		
 		setZOrderOnTop(true);
 		getHolder().setFormat(PixelFormat.TRANSPARENT);
+		
+		mSpinnerRotationSpeedFactor = getContext().getResources().getInteger(R.integer.progress_spinner_rotation_speed_percent) / 100f;
+		mSpinnerDrawable = getContext().getResources().getDrawable(R.drawable.snaprkitfx_sticker_progress);
+		mSpinnerDrawable.setBounds(10, 10, 10 + mSpinnerDrawable.getIntrinsicWidth(), 10 + mSpinnerDrawable.getIntrinsicHeight());
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -151,12 +164,14 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
 	public int getPinnedGraphicCount() {
-		int count = 0;
-		for (TabletopGraphic graphic : mBackgroundGraphics)
-			if (graphic.isPinned()) count = count + 1;
-		for (TabletopGraphic graphic : mForegroundGraphics)
-			if (graphic.isPinned()) count = count + 1;
-		return count;
+		synchronized (TabletopSurfaceView.this) {
+			int count = 0;
+			for (TabletopGraphic graphic : mBackgroundGraphics)
+				if (graphic.isPinned()) count = count + 1;
+			for (TabletopGraphic graphic : mForegroundGraphics)
+				if (graphic.isPinned()) count = count + 1;
+			return count;
+		}
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -176,6 +191,23 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * force graphics bounding box draw
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	public boolean getForceGraphicsBoundingBoxDraw() {
+		return mForceGraphicsBoundingBoxDraw;
+	}
+	
+	public void setForceGraphicsBoundsBoxDraw(boolean force) {
+		synchronized (TabletopSurfaceView.this) {
+			if (force == mForceGraphicsBoundingBoxDraw) return;
+			mForceGraphicsBoundingBoxDraw = force;
+			for (TabletopGraphic graphic : mBackgroundGraphics) graphic.setForceBoundingBoxDraw(force);
+			for (TabletopGraphic graphic : mForegroundGraphics) graphic.setForceBoundingBoxDraw(force);
+		}
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * autopin graphics
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
@@ -188,27 +220,52 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * spinner
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	public boolean isShowingSpinner() {
+		return mShowSpinner;
+	}
+	
+	public void setShowSpinner(boolean show) {
+		if (show == mShowSpinner) return;
+		mShowSpinner = show;
+		if (show) mSpinnerStartTime = System.currentTimeMillis();
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * pin all graphics
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
-	public synchronized void pinAllGraphics() {
+	public void pinAllGraphics() {
 		pinAllGraphics(null);
 	}
 
-	public synchronized void pinAllGraphics(List<TabletopGraphic> excluding) {
-		for (TabletopGraphic graphic : mBackgroundGraphics)
-			if (excluding == null || !excluding.contains(graphic))
-				graphic.pin();
-		for (TabletopGraphic graphic : mForegroundGraphics)
-			if (excluding == null || !excluding.contains(graphic))
-				graphic.pin();
+	public void pinAllGraphics(List<TabletopGraphic> excluding) {
+		boolean pinned = false;
+		
+		synchronized (TabletopSurfaceView.this) {
+			
+			for (TabletopGraphic graphic : mBackgroundGraphics)
+				if (excluding == null || !excluding.contains(graphic) && !graphic.isPinned()) {
+					pinned = true;
+					graphic.pin();
+				}
+			for (TabletopGraphic graphic : mForegroundGraphics)
+				if (excluding == null || !excluding.contains(graphic) && !graphic.isPinned()) {
+					pinned = true;
+					graphic.pin();
+				}
+		}
+		
+		if (pinned && mTabletopListener != null) mTabletopListener.onGraphicPinned();
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * on touch event
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
-	@Override public synchronized boolean onTouchEvent(MotionEvent event) {
+	@Override public boolean onTouchEvent(MotionEvent event) {
 		int action = JSAMotionEventUtil.getActionMasked(event);
 		int pointerId = event.getPointerId(JSAMotionEventUtil.getActionIndex(event));
 		
@@ -250,51 +307,53 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	 * on touch event: down
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-	private synchronized boolean onTouchEventActionDown(MotionEvent event) {
-		int graphicCount = mBackgroundGraphics.size() + mForegroundGraphics.size();
-		int pointerIndex = JSAMotionEventUtil.getActionIndex(event);
-		int pointerId = event.getPointerId(pointerIndex);
-		
-		// forward the event to the active graphic (if available)
-		if (mActiveGraphic != null) { 
-			boolean handle = mActiveGraphic.onTouchEvent(event);
-			if (!handle) mActiveGraphic = null;
-			return true;
-		} 
-		
-		// forward the event to all foreground graphics, setting the active graphic to the first responder
-		for (int i = mForegroundGraphics.size() - 1; i >= 0; i--) {
-			TabletopGraphic graphic = mForegroundGraphics.get(i);
-			if (!graphic.onTouchEvent(event)) continue;
-			setActiveGraphic(graphic, pointerId);
-			registerInteraction();
+	private boolean onTouchEventActionDown(MotionEvent event) {
+		synchronized (TabletopSurfaceView.this) {
+			int graphicCount = mBackgroundGraphics.size() + mForegroundGraphics.size();
+			int pointerIndex = JSAMotionEventUtil.getActionIndex(event);
+			int pointerId = event.getPointerId(pointerIndex);
+			
+			// forward the event to the active graphic (if available)
+			if (mActiveGraphic != null) { 
+				boolean handle = mActiveGraphic.onTouchEvent(event);
+				if (!handle) mActiveGraphic = null;
+				return true;
+			} 
+			
+			// forward the event to all foreground graphics, setting the active graphic to the first responder
+			for (int i = mForegroundGraphics.size() - 1; i >= 0; i--) {
+				TabletopGraphic graphic = mForegroundGraphics.get(i);
+				if (!graphic.onTouchEvent(event)) continue;
+				setActiveGraphic(graphic, pointerId);
+				registerInteraction();
+				return true;
+			}
+			
+			// forward the event to all background graphics, setting the active graphic to the first responder
+			for (int i = mBackgroundGraphics.size() - 1; i >= 0; i--) {
+				TabletopGraphic graphic = mBackgroundGraphics.get(i);
+				if (!graphic.onTouchEvent(event)) continue;
+				setActiveGraphic(graphic, pointerId);
+				registerInteraction();
+				return true;
+			}
+			
+			// return if there is no graphic to add
+			if (mTouchElement == null) return true;
+			
+			// return if the maximum number of graphics have been added
+			if (graphicCount >= mMaxGraphicCount) return true;
+			
+			// create and add a new graphic to the surface
+			PointF center = new PointF(event.getX(pointerIndex), event.getY(pointerIndex));
+			TabletopGraphic graphic = addGraphic(mTouchElement, center, false);
+			
+			// set the newly added graphic as the active graphic (if possible)
+			boolean handle = graphic.onTouchEvent(event);
+			if (handle) setActiveGraphic(graphic, pointerId);
+			if (handle) registerInteraction();
 			return true;
 		}
-		
-		// forward the event to all background graphics, setting the active graphic to the first responder
-		for (int i = mBackgroundGraphics.size() - 1; i >= 0; i--) {
-			TabletopGraphic graphic = mBackgroundGraphics.get(i);
-			if (!graphic.onTouchEvent(event)) continue;
-			setActiveGraphic(graphic, pointerId);
-			registerInteraction();
-			return true;
-		}
-		
-		// return if there is no graphic to add
-		if (mTouchElement == null) return true;
-		
-		// return if the maximum number of graphics have been added
-		if (graphicCount >= mMaxGraphicCount) return true;
-		
-		// create and add a new graphic to the surface
-		PointF center = new PointF(event.getX(pointerIndex), event.getY(pointerIndex));
-		TabletopGraphic graphic = addGraphic(mTouchElement, center, false);
-		
-		// set the newly added graphic as the active graphic (if possible)
-		boolean handle = graphic.onTouchEvent(event);
-		if (handle) setActiveGraphic(graphic, pointerId);
-		if (handle) registerInteraction();
-		return true;
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -312,24 +371,28 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	 * on touch event: up
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-	private synchronized boolean onTouchEventActionUp(MotionEvent event) {
+	private boolean onTouchEventActionUp(MotionEvent event) {
 		if (mActiveGraphic == null) return true;
 		mActiveGraphic.onTouchEvent(event);
 		TabletopGraphic.State state = mActiveGraphic.getState();
 		startNonInteractionTimeout();
 		
-		if (state.equals(TabletopGraphic.State.DELETED)) {
-			mBackgroundGraphics.remove(mActiveGraphic);
-			mForegroundGraphics.remove(mActiveGraphic);
+		synchronized (TabletopSurfaceView.this) {
+			
+			if (state.equals(TabletopGraphic.State.DELETED)) {
+				mBackgroundGraphics.remove(mActiveGraphic);
+				mForegroundGraphics.remove(mActiveGraphic);
+			}
+			
+			if (state.equals(TabletopGraphic.State.PINNED) || state.equals(TabletopGraphic.State.DISABLED)) {
+				mForegroundGraphics.remove(mActiveGraphic);
+				mBackgroundGraphics.add(mActiveGraphic);
+				if (mTabletopListener != null) mTabletopListener.onGraphicPinned();
+			}
+			
+			mActiveGraphic = null;
+			return true;
 		}
-		
-		if (state.equals(TabletopGraphic.State.PINNED) || state.equals(TabletopGraphic.State.DISABLED)) {
-			mForegroundGraphics.remove(mActiveGraphic);
-			mBackgroundGraphics.add(mActiveGraphic);
-		}
-		
-		mActiveGraphic = null;
-		return true;
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -361,36 +424,38 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	 * set active graphic
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
-	private synchronized void setActiveGraphic(TabletopGraphic graphic, int pointerId) {
-		
-		// pin all other graphics
-		List<TabletopGraphic> others = new ArrayList<TabletopGraphic>();
-		others.add(graphic);
-		pinAllGraphics(others);
-		
-		// set the active graphic and pointer id
-		mActiveGraphicPointerId = pointerId;
-		mActiveGraphic = graphic;
-		
-		// move the graphic to the top of the foreground list
-		mBackgroundGraphics.remove(graphic);
-		mForegroundGraphics.remove(graphic);
-		mForegroundGraphics.add(graphic);
+	private void setActiveGraphic(TabletopGraphic graphic, int pointerId) {
+		synchronized (TabletopSurfaceView.this) {
+			
+			// pin all other graphics
+			List<TabletopGraphic> others = new ArrayList<TabletopGraphic>();
+			others.add(graphic);
+			pinAllGraphics(others);
+			
+			// set the active graphic and pointer id
+			mActiveGraphicPointerId = pointerId;
+			mActiveGraphic = graphic;
+			
+			// move the graphic to the top of the foreground list
+			mBackgroundGraphics.remove(graphic);
+			mForegroundGraphics.remove(graphic);
+			mForegroundGraphics.add(graphic);
+		}
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * add graphic (bitmap)
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
-	public synchronized TabletopGraphic addGraphic(Bitmap bitmap, int width) {
+	public TabletopGraphic addGraphic(Bitmap bitmap, int width) {
 		return addGraphic(new BitmapGraphicElement(bitmap), width);
 	}
 	
-	protected synchronized TabletopGraphic addGraphic(Bitmap bitmap, PointF center, boolean registerInteraction) {
+	protected TabletopGraphic addGraphic(Bitmap bitmap, PointF center, boolean registerInteraction) {
 		return addGraphic(new BitmapGraphicElement(bitmap), center, 0, registerInteraction);
 	}
 	
-	protected synchronized TabletopGraphic addGraphic(Bitmap bitmap, PointF center, int width, boolean registerInteraction) {
+	protected TabletopGraphic addGraphic(Bitmap bitmap, PointF center, int width, boolean registerInteraction) {
 		return addGraphic(new BitmapGraphicElement(bitmap), center, width, registerInteraction);
 	}
 	
@@ -398,37 +463,41 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	 * add graphic (element)
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
-	public synchronized TabletopGraphic addGraphic(GraphicElement element, int width) {
-		int graphicCount = mBackgroundGraphics.size() + mForegroundGraphics.size();
-		
-		// return if the maximum number of graphics have been added
-		if (graphicCount >= mMaxGraphicCount) return null;
-		
-		// return the newly added graphic at the center of the surface
-		PointF center = new PointF(getWidth() / 2, getHeight() / 2);
-		return addGraphic(element, center, width, true);
+	public TabletopGraphic addGraphic(GraphicElement element, int width) {
+		synchronized (TabletopSurfaceView.this) {
+			int graphicCount = mBackgroundGraphics.size() + mForegroundGraphics.size();
+			
+			// return if the maximum number of graphics have been added
+			if (graphicCount >= mMaxGraphicCount) return null;
+			
+			// return the newly added graphic at the center of the surface
+			PointF center = new PointF(getWidth() / 2, getHeight() / 2);
+			return addGraphic(element, center, width, true);
+		}
 	}
 	
-	protected synchronized TabletopGraphic addGraphic(GraphicElement element, PointF center, boolean registerInteraction) {
+	protected TabletopGraphic addGraphic(GraphicElement element, PointF center, boolean registerInteraction) {
 		return addGraphic(element, center, 0, registerInteraction);
 	}
 	
-	protected synchronized TabletopGraphic addGraphic(GraphicElement element, PointF center, int width, boolean registerInteraction) {
-		if (mAutoPinGraphics) pinAllGraphics(); // pin all existing graphics if required
-		TabletopGraphic graphic = newTabletopGraphic(element, mNextGraphicId++, center, width);
-		graphic.setCropRegion(mCropRegion);
-		graphic.setReactivatePinned(true);
-		mForegroundGraphics.add(graphic);
-		if (registerInteraction) registerInteraction();
-		if (registerInteraction) startNonInteractionTimeout();
-		return graphic;
+	protected TabletopGraphic addGraphic(GraphicElement element, PointF center, int width, boolean registerInteraction) {
+		synchronized (TabletopSurfaceView.this) {
+			if (mAutoPinGraphics) pinAllGraphics(); // pin all existing graphics if required
+			TabletopGraphic graphic = newTabletopGraphic(element, mNextGraphicId++, center, width);
+			graphic.setCropRegion(mCropRegion);
+			graphic.setReactivatePinned(true);
+			mForegroundGraphics.add(graphic);
+			if (registerInteraction) registerInteraction();
+			if (registerInteraction) startNonInteractionTimeout();
+			return graphic;
+		}
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * new tabletop graphic
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
-	protected synchronized TabletopGraphic newTabletopGraphic(GraphicElement element, int id, PointF center, int width) {
+	protected TabletopGraphic newTabletopGraphic(GraphicElement element, int id, PointF center, int width) {
 		return new TabletopGraphic(getContext(), id, element.getBitmap(), center, 0, width == 0 ? element.getBitmap().getWidth() : width);
 	}
 	
@@ -448,7 +517,7 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	 * on draw
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-	@Override public synchronized void onDraw(Canvas canvas) {
+	@Override public void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
 		
 		// return if the canvas is invalid
@@ -465,14 +534,23 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		
 		// return if no drawing is required
 		if (!mDrawGraphics) return;
-			
-		// draw the background graphics
-		for (TabletopGraphic graphic : mBackgroundGraphics) 
-			graphic.onDraw(canvas, null);
 		
-		// draw the foreground graphics
-		for (TabletopGraphic graphic : mForegroundGraphics) 
-			graphic.onDraw(canvas, null);
+		synchronized (TabletopSurfaceView.this) {
+			
+			// draw the background graphics
+			for (TabletopGraphic graphic : mBackgroundGraphics) 
+				graphic.onDraw(canvas, null);
+			
+			// draw the foreground graphics
+			for (TabletopGraphic graphic : mForegroundGraphics) 
+				graphic.onDraw(canvas, null);
+		}
+		
+		// draw the spinner (if required)
+		if (!mShowSpinner) return;
+		int level = (int) (((mSpinnerStartTime - System.currentTimeMillis()) * mSpinnerRotationSpeedFactor) % 10000);
+		mSpinnerDrawable.setLevel(level);
+		mSpinnerDrawable.draw(canvas);
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -519,8 +597,11 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		}
 
 		@Override public void run() {
+			Thread.currentThread().setName(Thread.currentThread().getName() + " [" + getClass().getSimpleName() + "]");
 			while (mIsRunning) {
 				lockAndDrawCanvas(mView, mHolder);
+				try { Thread.sleep(10);
+                } catch (InterruptedException e) { }
 			}
 		}
 	}
@@ -560,11 +641,11 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	 * Scale the graphics such that the graphics are drawn on the given bitmap in the center of the surface.
 	 * Return the modified bitmap.
 	 */
-	public synchronized Bitmap drawOnBitmap(Bitmap bitmap, boolean recycle) {
+	public Bitmap drawOnBitmap(Bitmap bitmap, boolean recycle) {
 		return drawOnBitmap(bitmap, recycle, getWidth(), getHeight());
 	}
 	
-	public synchronized Bitmap drawOnBitmap(Bitmap bitmap, boolean recycle, int surfaceWidth, int surfaceHeight) {
+	public Bitmap drawOnBitmap(Bitmap bitmap, boolean recycle, int surfaceWidth, int surfaceHeight) {
 		if (bitmap == null) throw new IllegalArgumentException();
 		
 		// copy and and recycle the bitmap if not mutable
@@ -581,14 +662,16 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		Canvas canvas = new BitmapCanvas(bitmap);
 		float inverseScale = 1 / scale;
 		
-		// draw the background graphics
-		for (TabletopGraphic graphic : mBackgroundGraphics)
-			TabletopGraphic.onDrawScaled(graphic, canvas, inverseScale, inverseScale, offsetX, offsetY);
-
-		// draw the foreground graphics
-		for (TabletopGraphic graphic : mForegroundGraphics)
-			TabletopGraphic.onDrawScaled(graphic, canvas, inverseScale, inverseScale, offsetX, offsetY);
-		
+		synchronized (TabletopSurfaceView.this) {
+			
+			// draw the background graphics
+			for (TabletopGraphic graphic : mBackgroundGraphics)
+				TabletopGraphic.onDrawScaled(graphic, canvas, inverseScale, inverseScale, offsetX, offsetY);
+	
+			// draw the foreground graphics
+			for (TabletopGraphic graphic : mForegroundGraphics)
+				TabletopGraphic.onDrawScaled(graphic, canvas, inverseScale, inverseScale, offsetX, offsetY);
+		}
 		
 		return bitmap;
 	}

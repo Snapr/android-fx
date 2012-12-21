@@ -149,6 +149,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 				mTabletop.setInteractionEnabled(false);
 				mTabletop.pinAllGraphics();
 				updateViewEditedImageView();
+				updateViewProgress();
 				updateView();
 			}
 		});
@@ -160,6 +161,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 				mInteractionState = InteractionState.SHOWING_STICKERS;
 				mTabletop.setInteractionEnabled(true);
 				updateViewEditedImageView();
+				updateViewProgress();
 				updateView();
 			}
 		});
@@ -347,10 +349,6 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		// show or hide the tabletop (prevent showing the tabletop when rendering the final image)
 		boolean isImageVisible = mEditedImageView.getVisibility() == View.VISIBLE;
 		mTabletop.setVisibility(isShowingFilters || !isImageVisible ? View.GONE : View.VISIBLE);
-		
-		// show or hide the indeterminate progress
-		if (mComposeBitmapAsyncTask != null && isShowingFilters) mFragmentListener.onShowProgressUnblocking();
-		else mFragmentListener.onHideProgressUnblocking();
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -381,6 +379,22 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mTabletop.setDrawGraphics(!showComposed);
 	}
 
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	 * update view: progress
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	private void updateViewProgress() {
+		boolean isShowingFilters = mInteractionState.equals(InteractionState.SHOWING_FILTERS);
+		boolean areAllGraphicsPinned = mTabletop.getPinnedGraphicCount() == mTabletop.getGraphicCount();
+		boolean isComposingBitmap = mComposeBitmapAsyncTask != null;
+		
+		// show or hide the indeterminate progress (shown when composing the bitmap on the filters or waiting on a composition on the stickers)
+		boolean showProgress = isComposingBitmap && (isShowingFilters || (!isShowingFilters && areAllGraphicsPinned));
+		if (showProgress) onShowProgressUnblocking();
+		else onHideProgressUnblocking();
+
+	}
+	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * on next button click
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -393,6 +407,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		if (hasStickers && hasFilters && isShowingFilters) mInteractionState = InteractionState.SHOWING_STICKERS; // show the filters
 		else new SaveEditedBitmapToFileAsyncTask().execute(); // save bitmap and change file		
 		updateViewEditedImageView();
+		updateViewProgress();
 		updateView();
 	}
 
@@ -434,19 +449,38 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	 * on progress unblocking
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	private void onShowProgressUnblocking() {
+		if (mTabletop != null) mTabletop.setShowSpinner(true);
+		if (mTabletop != null) mTabletop.setForceGraphicsBoundsBoxDraw(true);
+		if (mFragmentListener != null) mFragmentListener.onShowProgressUnblocking();
+	}
+	
+	private void onHideProgressUnblocking() {
+		if (mTabletop != null) mTabletop.setShowSpinner(false);
+		if (mTabletop != null) mTabletop.setForceGraphicsBoundsBoxDraw(false);
+		if (mFragmentListener != null) mFragmentListener.onHideProgressUnblocking();
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * tabletop listener
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
 	@Override public void onInteraction(int interactionCount) {
 		updateViewEditedImageView();
+		updateViewProgress();
 	}
 	
 	@Override public void onNonInteraction(int interactionCount) {
 		composeBitmap(false);
+		updateViewProgress();
 	}
 	
 	@Override public void onGraphicPinned() {
 		composeBitmap(false);
+		updateViewProgress();
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -478,34 +512,33 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		}
 		
 		@Override protected Bitmap doInBackground(Void... params) {
-			synchronized (SnaprImageEditFragment.this) { // synchronise to prevent two tasks running concurrently
-				try {
-					
-					// load the bitmap from the temporarily saved, resized bitmap
-					Bitmap bitmap = SnaprImageEditFragmentUtil.loadTempImage();
+			Thread.currentThread().setName(Thread.currentThread().getName() + " [" + getClass().getSimpleName() + "]");
+			try {
+				
+				// load the bitmap from the temporarily saved, resized bitmap
+				Bitmap bitmap = SnaprImageEditFragmentUtil.loadTempImage();
+				if (isCancelled()) return null;
+				
+				// generate the base bitmap by applying the effect (if required)
+				if (!JSAObjectUtil.equals(mAppliedEffect, mBaseBitmapEffect)) {
+					mBaseBitmap = bitmap;
+					mBaseBitmapEffect = mAppliedEffect;
+					if (mAppliedEffect != null) mAppliedEffect.getFilter().apply(mContext, mBaseBitmap);
+					if (mTabletop.getGraphicCount() == 0) return mBaseBitmap;
+					bitmap = SnaprImageEditFragmentUtil.loadTempImage();
 					if (isCancelled()) return null;
-					
-					// generate the base bitmap by applying the effect (if required)
-					if (!JSAObjectUtil.equals(mAppliedEffect, mBaseBitmapEffect)) {
-						mBaseBitmap = bitmap;
-						mBaseBitmapEffect = mAppliedEffect;
-						if (mAppliedEffect != null) mAppliedEffect.getFilter().apply(mContext, mBaseBitmap);
-						if (mTabletop.getGraphicCount() == 0) return mBaseBitmap;
-						bitmap = SnaprImageEditFragmentUtil.loadTempImage();
-						if (isCancelled()) return null;
-					}
-					
-					// draw the stickers and apply the effect
-					bitmap = mTabletop.drawOnBitmap(bitmap, true);
-					mComposedBitmapInteractionCount = mTabletop.getInteractionCount();
-					if (isCancelled()) return null;
-					if (mAppliedEffect != null) mAppliedEffect.getFilter().apply(mContext, bitmap);
-					if (isCancelled()) return null;
-					return bitmap;
-				} catch (IOException exception) {
-					if (DEBUG) Log.e(SnaprImageEditFragment.class.getSimpleName(), "error applying effect", exception);
-					return null;
 				}
+				
+				// draw the stickers and apply the effect
+				bitmap = mTabletop.drawOnBitmap(bitmap, true);
+				mComposedBitmapInteractionCount = mTabletop.getInteractionCount();
+				if (isCancelled()) return null;
+				if (mAppliedEffect != null) mAppliedEffect.getFilter().apply(mContext, bitmap);
+				if (isCancelled()) return null;
+				return bitmap;
+			} catch (IOException exception) {
+				if (DEBUG) Log.e(SnaprImageEditFragment.class.getSimpleName(), "error applying effect", exception);
+				return null;
 			}
 		}
 
@@ -517,6 +550,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			mComposedBitmap = result;
 			mComposeBitmapAsyncTask = null;
 			updateViewEditedImageView();
+			updateViewProgress();
 			updateView();
 		}
 	}
@@ -567,6 +601,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		}
 
 		@Override protected JSATuple<FilterPack, StickerPack> doInBackground(Void... params) {
+			Thread.currentThread().setName(Thread.currentThread().getName() + " [" + getClass().getSimpleName() + "]");
 			if (DEBUG) JSATimeUtil.logTime();
 			FilterPack filterPack = inflateEffects();
 			if (DEBUG) JSATimeUtil.logTime("filter packs inflated");
@@ -624,6 +659,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		}
 		
 		@Override protected Boolean doInBackground(Void... params) {
+			Thread.currentThread().setName(Thread.currentThread().getName() + " [" + getClass().getSimpleName() + "]");
 			if (DEBUG) JSATimeUtil.logTime();
 			for (SnaprEffect effect : mEffects)
 				effect.getFilter().loadImagesNoException(mContext, mFilterPackLocation, new SimpleOnImageLoadListener());
