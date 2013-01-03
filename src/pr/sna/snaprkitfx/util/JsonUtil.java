@@ -1,4 +1,4 @@
-package pr.sna.snaprkit.util;
+package pr.sna.snaprkitfx.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

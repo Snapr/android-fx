@@ -1,4 +1,4 @@
-package pr.sna.snaprkit;
+package pr.sna.snaprkitfx;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,10 +11,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import pr.sna.snaprkit.SnaprFilterUtil.BlendingMode;
-import pr.sna.snaprkit.SnaprFilterUtil.OnImageLoadListener;
-import pr.sna.snaprkit.tabletop.TabletopSurfaceView.GraphicElement;
-import pr.sna.snaprkit.util.JsonUtil;
+import pr.sna.snaprkitfx.SnaprFilterUtil.BlendingMode;
+import pr.sna.snaprkitfx.SnaprFilterUtil.OnImageLoadListener;
+import pr.sna.snaprkitfx.tabletop.TabletopSurfaceView.GraphicElement;
+import pr.sna.snaprkitfx.util.JsonUtil;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.graphics.Bitmap;

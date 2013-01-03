@@ -1,4 +1,4 @@
-package pr.sna.snaprkit;
+package pr.sna.snaprkitfx;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,13 +11,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import pr.sna.snaprkit.effect.BlurEffect;
-import pr.sna.snaprkit.effect.CompositeEffect;
-import pr.sna.snaprkit.effect.HSBEffect;
-import pr.sna.snaprkit.effect.LevelsEffect;
-import pr.sna.snaprkit.effect.PolynomialFunctionEffect;
-import pr.sna.snaprkit.effect.SaturateEffect;
-import pr.sna.snaprkit.util.JsonUtil;
+import pr.sna.snaprkitfx.effect.BlurEffect;
+import pr.sna.snaprkitfx.effect.CompositeEffect;
+import pr.sna.snaprkitfx.effect.HSBEffect;
+import pr.sna.snaprkitfx.effect.LevelsEffect;
+import pr.sna.snaprkitfx.effect.PolynomialFunctionEffect;
+import pr.sna.snaprkitfx.effect.SaturateEffect;
+import pr.sna.snaprkitfx.util.JsonUtil;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;

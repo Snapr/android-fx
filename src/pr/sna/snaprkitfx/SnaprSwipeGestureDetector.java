@@ -1,4 +1,4 @@
-package pr.sna.snaprkit;
+package pr.sna.snaprkitfx;
 
 import android.view.MotionEvent;
 import android.view.GestureDetector.SimpleOnGestureListener;

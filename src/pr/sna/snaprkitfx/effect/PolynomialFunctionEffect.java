@@ -1,4 +1,4 @@
-package pr.sna.snaprkit.effect;
+package pr.sna.snaprkitfx.effect;
 
 import android.graphics.Bitmap;
 

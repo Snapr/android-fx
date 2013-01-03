@@ -5,6 +5,6 @@
 		android:id="@+id/fragment"
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent"
-		class="pr.sna.snaprkit.SnaprImageEditFragment" />
+		class="pr.sna.snaprkitfx.SnaprImageEditFragment" />
 
 </merge>

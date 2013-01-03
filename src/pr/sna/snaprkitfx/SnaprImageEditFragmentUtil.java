@@ -1,4 +1,4 @@
-package pr.sna.snaprkit;
+package pr.sna.snaprkitfx;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,8 +13,8 @@ import nz.co.juliusspencer.android.JSAFileUtil;
 import nz.co.juliusspencer.android.JSAImageUtil;
 import nz.co.juliusspencer.android.JSAMathUtil;
 import nz.co.juliusspencer.android.JSATuple;
-import pr.sna.snaprkit.tabletop.TabletopSurfaceView;
-import pr.sna.snaprkit.util.CameraUtil;
+import pr.sna.snaprkitfx.tabletop.TabletopSurfaceView;
+import pr.sna.snaprkitfx.util.CameraUtil;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.content.Context;

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="pr.sna.snaprkit"
+	package="pr.sna.snaprkitfx"
 	android:versionCode="1"
 	android:versionName="1.0" >
 
@@ -11,7 +11,7 @@
 
 		<!-- SnaprKitFX: Activities, required -->
 		<activity
-			android:name="pr.sna.snaprkit.SnaprImageEditFragmentActivity"
+			android:name="pr.sna.snaprkitfx.SnaprImageEditFragmentActivity"
 			android:configChanges="keyboardHidden|orientation"
 			android:screenOrientation="portrait"
 			android:theme="@style/Application.Theme.NoTitleBar" />

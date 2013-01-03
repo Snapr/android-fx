@@ -1,4 +1,4 @@
-package pr.sna.snaprkit;
+package pr.sna.snaprkitfx;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,14 +8,14 @@ import java.util.List;
 import nz.co.juliusspencer.android.JSAObjectUtil;
 import nz.co.juliusspencer.android.JSATimeUtil;
 import nz.co.juliusspencer.android.JSATuple;
-import pr.sna.snaprkit.SnaprEffect.EffectConfig;
-import pr.sna.snaprkit.SnaprFilterUtil.Filter;
-import pr.sna.snaprkit.SnaprFilterUtil.FilterPack;
-import pr.sna.snaprkit.SnaprFilterUtil.OnImageLoadListener;
-import pr.sna.snaprkit.SnaprStickerUtil.Sticker;
-import pr.sna.snaprkit.SnaprStickerUtil.StickerPack;
-import pr.sna.snaprkit.tabletop.TabletopSurfaceView;
-import pr.sna.snaprkit.tabletop.TabletopSurfaceView.TabletopListener;
+import pr.sna.snaprkitfx.SnaprEffect.EffectConfig;
+import pr.sna.snaprkitfx.SnaprFilterUtil.Filter;
+import pr.sna.snaprkitfx.SnaprFilterUtil.FilterPack;
+import pr.sna.snaprkitfx.SnaprFilterUtil.OnImageLoadListener;
+import pr.sna.snaprkitfx.SnaprStickerUtil.Sticker;
+import pr.sna.snaprkitfx.SnaprStickerUtil.StickerPack;
+import pr.sna.snaprkitfx.tabletop.TabletopSurfaceView;
+import pr.sna.snaprkitfx.tabletop.TabletopSurfaceView.TabletopListener;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.MediaScannerConnection;

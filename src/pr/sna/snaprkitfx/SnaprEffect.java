@@ -1,8 +1,8 @@
-package pr.sna.snaprkit;
+package pr.sna.snaprkitfx;
 
 import java.io.Serializable;
 
-import pr.sna.snaprkit.SnaprFilterUtil.Filter;
+import pr.sna.snaprkitfx.SnaprFilterUtil.Filter;
 
 public class SnaprEffect {
 	
