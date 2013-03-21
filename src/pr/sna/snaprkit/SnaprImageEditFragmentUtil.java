@@ -13,6 +13,7 @@ import nz.co.juliusspencer.android.JSAFileUtil;
 import nz.co.juliusspencer.android.JSAImageUtil;
 import nz.co.juliusspencer.android.JSAMathUtil;
 import nz.co.juliusspencer.android.JSATuple;
+import pr.sna.snaprkit.SnaprFilterUtil.Filter;
 import pr.sna.snaprkit.tabletop.TabletopSurfaceView;
 import pr.sna.snaprkit.util.CameraUtil;
 import android.annotation.SuppressLint;
@@ -63,17 +64,17 @@ public class SnaprImageEditFragmentUtil {
 		private final Context mContext;
 		private final String mOriginalFilePath;
 		private final String mSaveFilePath;
-		private final SnaprEffect mEffect;
+		private final Filter mFilter;
 		private final TabletopSurfaceView mTabletop;
 		private final int mTabletopWidth;
 		private final int mTabletopHeight;
 		
-		public SaveEditedBitmapToFileAsyncTask(Context context, String originalFilePath, String saveFilenPath, SnaprEffect effect, TabletopSurfaceView tabletop) {
+		public SaveEditedBitmapToFileAsyncTask(Context context, String originalFilePath, String saveFilenPath, Filter filter, TabletopSurfaceView tabletop) {
 			if (context == null || saveFilenPath == null || tabletop == null) throw new IllegalArgumentException();
 			mContext = context;
 			mOriginalFilePath = originalFilePath;
 			mSaveFilePath = saveFilenPath;
-			mEffect = effect;
+			mFilter = filter;
 			mTabletop = tabletop;
 			mTabletopWidth = tabletop.getWidth();
 			mTabletopHeight = tabletop.getHeight();
@@ -125,7 +126,7 @@ public class SnaprImageEditFragmentUtil {
 				bitmap = mTabletop.drawOnBitmap(bitmap, true, mTabletopWidth, mTabletopHeight);
 				
 				// apply the effect to the bitmap (if required)
-				if (mEffect != null) mEffect.getFilter().apply(mContext.getApplicationContext(), bitmap);
+				if (mFilter != null) mFilter.apply(mContext.getApplicationContext(), bitmap);
 				
 				// save the bitmap to file
 				FileOutputStream fos = new FileOutputStream(file.getAbsolutePath());

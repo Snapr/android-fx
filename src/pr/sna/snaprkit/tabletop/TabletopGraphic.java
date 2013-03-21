@@ -308,7 +308,7 @@ public class TabletopGraphic implements Cloneable {
 		mBoundingBoxPath.lineTo(mGeometryHelper.getCorner(0, mCenter).x, mGeometryHelper.getCorner(0, mCenter).y); 		// top left (again)
 		
 		// draw the bounding box
-		boolean forceBoundingBoxDraw = mForceBoundingBoxDraw && !(context instanceof ScaledDrawContext);
+		boolean forceBoundingBoxDraw = mForceBoundingBoxDraw && !(context instanceof ScaledDrawContext) && !isPinned;
 		if (!isDeleted && !isDisabled && !isPinned || forceBoundingBoxDraw) canvas.drawPath(mBoundingBoxPath, mBoundingBoxPaint);
 		
 		// draw the rotation button

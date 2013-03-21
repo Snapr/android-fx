@@ -4,11 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import nz.co.juliusspencer.android.JSADimensionUtil;
 import nz.co.juliusspencer.android.JSAObjectUtil;
 import nz.co.juliusspencer.android.JSATimeUtil;
 import nz.co.juliusspencer.android.JSATuple;
-import pr.sna.snaprkit.SnaprEffect.EffectConfig;
 import pr.sna.snaprkit.SnaprFilterUtil.Filter;
 import pr.sna.snaprkit.SnaprFilterUtil.FilterPack;
 import pr.sna.snaprkit.SnaprFilterUtil.OnImageLoadListener;
@@ -25,10 +26,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.ViewGroup.MarginLayoutParams;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,7 +40,7 @@ import android.widget.Toast;
 public class SnaprImageEditFragment extends Fragment implements TabletopListener {
 	private FragmentListener mFragmentListener;
 
-	private final List<SnaprEffect> mEffects = new ArrayList<SnaprEffect>();
+	private final List<Filter> mFilters = new ArrayList<Filter>();
 	private final List<Sticker> mStickers = new ArrayList<Sticker>();
 	
 	private File mOriginalFile;					// the location of the original, unscaled image
@@ -46,10 +50,11 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private Bitmap mComposedBitmap;							// the original, scaled bitmap (possibly with stickers and an effect applied)
 	private ComposeBitmapAsyncTask mComposeBitmapAsyncTask;	// the currently running compose bitmap task
 	
-	private SnaprEffect mBaseBitmapEffect;					// the effect currently applied to the base bitmap
+	private Filter mBaseBitmapFilter;						// the effect currently applied to the base bitmap
 	private int mComposedBitmapInteractionCount;			// the interaction count of the tabletop when the composed bitmap was created
 	
-	private SnaprEffect mAppliedEffect;
+	private Filter mAppliedFilter;
+	private Sticker mLastAppliedSticker;
 	private InteractionState mInteractionState = InteractionState.SHOWING_FILTERS;	// the current state of the fragment interaction
 	
 	private String mFilterPackLocation = FILTER_PACK_PATH_DEFAULT;		// the location (under assets) where the filter packs will be loaded from
@@ -66,7 +71,6 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private ImageView mEditedImageView;
 	private TabletopSurfaceView mTabletop;
 	private TextView mMessageTextView;
-	private View mMessageLayout;
 
 	private View mFilterContainerRoot;
 	private ViewGroup mFilterContainer;
@@ -78,6 +82,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	
 	private View mCancelButton;
 	private View mNextButton;
+	
+	private ViewTreeObserver.OnGlobalLayoutListener mMessageTextViewLayoutListener;
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * constants
@@ -118,8 +124,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mEditedImageView = (ImageView) getView().findViewById(R.id.edited_image);
 		mTabletop = (TabletopSurfaceView) getView().findViewById(R.id.tabletop);
 		mMessageTextView = (TextView) getView().findViewById(R.id.message_textview);
-		mMessageLayout = getView().findViewById(R.id.message_layout);
-
+		initialiseMessageTextView();
+		
 		mFilterContainer = (ViewGroup) getView().findViewById(R.id.filter_container);
 		mStickerContainer = (ViewGroup) getView().findViewById(R.id.sticker_container);
 		
@@ -200,7 +206,46 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mViewsInitialised = true;
 		updateView();
 	}
+	
+	private void initialiseMessageTextView() {
+		// attach view tree observer so we can keep track of the bounds an ensure a square background
+		mMessageTextViewLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
+			@Override public void onGlobalLayout() { onMessageTextViewLayout(); } };
+		mMessageTextView.getViewTreeObserver().addOnGlobalLayoutListener(mMessageTextViewLayoutListener);
 
+		/* bit of an ugly hack to scale down text based on screen aspect ratio */
+		JSATuple<Integer, Integer> dimens = JSADimensionUtil.getDefaultDisplayDimensions(getActivity());
+		int screenWidth = Math.max(dimens.getA(), dimens.getB());
+		int screenHeight = Math.min(dimens.getA(), dimens.getB());
+		float screenAspectRatio = (float) screenWidth / screenHeight;
+		float scale = screenAspectRatio > 1.67f ? 1 : screenAspectRatio > 1.49f ? 0.8f : 0.65f; 
+		
+		float defaultTextSize = getResources().getDimension(R.dimen.message_text_size);
+		float defaultPadding = getResources().getDimension(R.dimen.message_text_padding);
+		float defaultMargin = getResources().getDimension(R.dimen.message_container_margin);
+		int padding = (int) (defaultPadding * scale);
+		int margin = (int) (defaultMargin * scale * scale);
+		mMessageTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, (defaultTextSize * scale));
+		mMessageTextView.setPadding(padding, (int) (padding / scale), padding, padding);
+		((MarginLayoutParams) mMessageTextView.getLayoutParams()).bottomMargin = margin;
+		((MarginLayoutParams) mMessageTextView.getLayoutParams()).leftMargin = margin;
+		((MarginLayoutParams) mMessageTextView.getLayoutParams()).rightMargin = margin;
+		((MarginLayoutParams) mMessageTextView.getLayoutParams()).topMargin = margin;
+	}
+
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * life cycle
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	@SuppressWarnings("deprecation") @Override public void onDestroyView() {
+		super.onDestroyView();
+		if (mMessageTextViewLayoutListener != null) {
+			mMessageTextView.getViewTreeObserver().removeGlobalOnLayoutListener(mMessageTextViewLayoutListener);
+			mMessageTextViewLayoutListener = null;
+		}
+	}
+	
+	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * on original available bitmap
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -221,6 +266,21 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * on message textview layout
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	private void onMessageTextViewLayout() {
+		final int width = mMessageTextView.getMeasuredWidth();
+		final int height = mMessageTextView.getMeasuredHeight();
+		if (width == 0 || height == 0) return;
+		
+		int dimen = Math.min(width, height);
+		mMessageTextView.getLayoutParams().width = dimen;
+		mMessageTextView.getLayoutParams().height = dimen;
+		mMessageTextView.requestLayout();
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * initialise effects
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
@@ -238,17 +298,17 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 		
 		// create the thumbnail views for each effect
-		for (SnaprEffect effect : mEffects) {
+		for (Filter filter : mFilters) {
 			View view = inflater.inflate(R.layout.snaprkitfx_effect_item, null);
-			view.setTag(effect);
+			view.setTag(filter);
 			
 			ImageView image = (ImageView) view.findViewById(R.id.effect_imageview);
-			if (effect.getFilter().getThumbnail() != null) image.setImageBitmap(effect.getFilter().getThumbnail());
+			if (filter.getThumbnail() != null) image.setImageBitmap(filter.getThumbnail());
 			else image.setImageResource(R.drawable.snaprkitfx_ic_effect_placeholder);
-			image.setTag(effect);
+			image.setTag(filter);
 
 			TextView tv = ((TextView) view.findViewById(R.id.effect_textview));
-			tv.setText(effect.getFilter().getName());
+			tv.setText(filter.getName());
 
 			image.setOnClickListener(new View.OnClickListener() {
 				@Override public void onClick(View view) {
@@ -260,11 +320,11 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		}
 	}
 	
-	private void updateEffectView(SnaprEffect effect) {
-		View view = mFilterContainer.findViewWithTag(effect);
+	private void updateEffectView(Filter filter) {
+		View view = mFilterContainer.findViewWithTag(filter);
 		if (view == null) return;
 		ImageView image = (ImageView) view.findViewById(R.id.effect_imageview);
-		if (effect.getFilter().getThumbnail() != null) image.setImageBitmap(effect.getFilter().getThumbnail());
+		if (filter.getThumbnail() != null) image.setImageBitmap(filter.getThumbnail());
 		else image.setImageResource(R.drawable.snaprkitfx_ic_effect_placeholder);
 	}
 	
@@ -307,12 +367,24 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		}
 	}
 
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 *  update sticker
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	private void updateLastAppliedSticker() {
+		boolean updateView = mLastAppliedSticker != null && mLastAppliedSticker.getSettings().isLocked(); 
+		mLastAppliedSticker = null;
+		if (updateView) updateView();
+	}
+	
 	private void updateStickerView(Sticker sticker) {
 		View view = mStickerContainer.findViewWithTag(sticker);
 		if (view == null) return;
 		ImageView image = (ImageView) view.findViewById(R.id.effect_imageview);
+		view.setVisibility(sticker.getSettings().isVisible() ? View.VISIBLE : View.GONE);
 		if (sticker.getThumbnail() != null) image.setImageBitmap(sticker.getThumbnail());
 		else image.setImageResource(R.drawable.snaprkitfx_ic_sticker_placeholder);
+		view.findViewById(R.id.locked_overlay_imageview).setVisibility(sticker.getSettings().isLocked() ? View.VISIBLE : View.INVISIBLE);
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -321,10 +393,14 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	
 	private void updateView() {
 		if (!isAdded() || !mViewsInitialised) return;
-		boolean isLocked = mAppliedEffect != null ? mAppliedEffect.isLocked() : false;
 		boolean isShowingFilters = mInteractionState.equals(InteractionState.SHOWING_FILTERS);
+		boolean isFilterLocked = mAppliedFilter != null ? mAppliedFilter.getSettings().isLocked() : false;
+		boolean isStickerLocked = mLastAppliedSticker != null ? mLastAppliedSticker.getSettings().isLocked() : false;
 		boolean hasStickers = mStickers.size() != 0;
-		boolean hasFilters = mEffects.size() != 0;
+		boolean hasFilters = mFilters.size() != 0;
+
+		// reset last selected sticker if we're not displaying stickers anymore
+		if (isShowingFilters && mLastAppliedSticker != null) mLastAppliedSticker = null;
 		
 		// update the filter or sticker containers
 		mFilterContainerRoot.setVisibility(hasFilters && isShowingFilters ? View.VISIBLE : View.GONE);
@@ -337,31 +413,32 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mStickerButton.setSelected(!isShowingFilters);
 		
 		// update the locked message
-		if (mAppliedEffect != null) mMessageTextView.setText(mAppliedEffect.getUnlockMessage());
-		mMessageLayout.setVisibility(isLocked ? View.VISIBLE : View.INVISIBLE);
+		if (mAppliedFilter != null && isFilterLocked) mMessageTextView.setText(mAppliedFilter.getSettings().getUnlockMessage());
+		if (mLastAppliedSticker != null && isStickerLocked) mMessageTextView.setText(mLastAppliedSticker.getSettings().getUnlockMessage());
+		mMessageTextView.setVisibility(isFilterLocked || isStickerLocked ? View.VISIBLE : View.INVISIBLE);
 		
 		// update the next button
 		boolean isNextButton = hasStickers && hasFilters && isShowingFilters;
 		int resourceId = isNextButton ? R.drawable.snaprkitfx_btn_next_normal : R.drawable.snaprkitfx_btn_tick;
 		mNextButton.setBackgroundResource(resourceId);
-		mNextButton.setEnabled(isNextButton || !isLocked);
+		mNextButton.setEnabled(isNextButton || (!isFilterLocked && !isStickerLocked));
 		
 		// show or hide the tabletop (prevent showing the tabletop when rendering the final image)
 		boolean isImageVisible = mEditedImageView.getVisibility() == View.VISIBLE;
 		mTabletop.setVisibility(isShowingFilters || !isImageVisible ? View.GONE : View.VISIBLE);
 	}
-
+	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 *  update view: effects
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
 	private void updateViewEffects() {
-		for (SnaprEffect effect : mEffects) {
-			View view = mFilterContainer.findViewWithTag(effect);
+		for (Filter filter : mFilters) {
+			View view = mFilterContainer.findViewWithTag(filter);
 			if (view == null) return;
-			view.setVisibility(effect.isVisible() ? View.VISIBLE : View.GONE);
-			view.findViewById(R.id.chosen_imageview).setSelected(effect.equals(mAppliedEffect));
-			view.findViewById(R.id.locked_overlay_imageview).setVisibility(effect.isLocked() ? View.VISIBLE : View.INVISIBLE);
+			view.setVisibility(filter.getSettings().isVisible() ? View.VISIBLE : View.GONE);
+			view.findViewById(R.id.chosen_imageview).setSelected(filter.equals(mAppliedFilter));
+			view.findViewById(R.id.locked_overlay_imageview).setVisibility(filter.getSettings().isLocked() ? View.VISIBLE : View.INVISIBLE);
 		}
 	}
 	
@@ -402,7 +479,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private void onNextButtonClick() {
 		boolean isShowingFilters = mInteractionState.equals(InteractionState.SHOWING_FILTERS);
 		boolean hasStickers = mStickers.size() != 0;
-		boolean hasFilters = mEffects.size() != 0;
+		boolean hasFilters = mFilters.size() != 0;
 		
 		if (hasStickers && hasFilters && isShowingFilters) mInteractionState = InteractionState.SHOWING_STICKERS; // show the filters
 		else new SaveEditedBitmapToFileAsyncTask().execute(); // save bitmap and change file		
@@ -416,9 +493,9 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 	private void onEffectClick(View v) {
-		SnaprEffect effect = (SnaprEffect) v.getTag();
-		if (effect.equals(mAppliedEffect)) return;
-		mAppliedEffect = effect;
+		Filter filter = (Filter) v.getTag();
+		if (filter.equals(mAppliedFilter)) return;
+		mAppliedFilter = filter;
 		composeBitmap(true);
 		updateViewEffects();
 	}
@@ -439,6 +516,15 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			toast.show();
 			return;
 		}
+
+		// don't add stickers if the currently selected filter is locked
+		if (mAppliedFilter != null && mAppliedFilter.getSettings().isLocked()) return;
+		
+		// keep track of last selected sticker for unlock message
+		mLastAppliedSticker = sticker;
+		updateView();
+		// don't add sticker if it's locked
+		if (sticker.getSettings().isLocked()) return;
 		
 		// scale the bitmap such that neither width nor height exceed a given ratio of the image
 		int minImageLength = Math.min(mEditedImageView.getWidth(), mEditedImageView.getHeight());
@@ -471,16 +557,19 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	@Override public void onInteraction(int interactionCount) {
 		updateViewEditedImageView();
 		updateViewProgress();
+		updateLastAppliedSticker();
 	}
 	
 	@Override public void onNonInteraction(int interactionCount) {
 		composeBitmap(false);
 		updateViewProgress();
+		updateLastAppliedSticker();
 	}
 	
 	@Override public void onGraphicPinned() {
 		composeBitmap(false);
 		updateViewProgress();
+		updateLastAppliedSticker();
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -520,10 +609,10 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 				if (isCancelled()) return null;
 				
 				// generate the base bitmap by applying the effect (if required)
-				if (!JSAObjectUtil.equals(mAppliedEffect, mBaseBitmapEffect)) {
+				if (!JSAObjectUtil.equals(mAppliedFilter, mBaseBitmapFilter)) {
 					mBaseBitmap = bitmap;
-					mBaseBitmapEffect = mAppliedEffect;
-					if (mAppliedEffect != null) mAppliedEffect.getFilter().apply(mContext, mBaseBitmap);
+					mBaseBitmapFilter = mAppliedFilter;
+					if (mAppliedFilter != null) mAppliedFilter.apply(mContext, mBaseBitmap);
 					if (mTabletop.getGraphicCount() == 0) return mBaseBitmap;
 					bitmap = SnaprImageEditFragmentUtil.loadTempImage();
 					if (isCancelled()) return null;
@@ -533,7 +622,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 				bitmap = mTabletop.drawOnBitmap(bitmap, true);
 				mComposedBitmapInteractionCount = mTabletop.getInteractionCount();
 				if (isCancelled()) return null;
-				if (mAppliedEffect != null) mAppliedEffect.getFilter().apply(mContext, bitmap);
+				if (mAppliedFilter != null) mAppliedFilter.apply(mContext, bitmap);
 				if (isCancelled()) return null;
 				return bitmap;
 			} catch (IOException exception) {
@@ -562,7 +651,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private class SaveEditedBitmapToFileAsyncTask extends SnaprImageEditFragmentUtil.SaveEditedBitmapToFileAsyncTask {
 
 		public SaveEditedBitmapToFileAsyncTask() {
-			super(getActivity(), mOriginalFile.getAbsolutePath(), mSaveFile.getAbsolutePath(), mAppliedEffect, mTabletop);
+			super(getActivity(), mOriginalFile.getAbsolutePath(), mSaveFile.getAbsolutePath(), mAppliedFilter, mTabletop);
 		}
 
 		@Override protected void onPreExecute() {
@@ -571,9 +660,9 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			mFragmentListener.onShowProgressBlocking(getString(R.string.snaprkitfx_saving_));
 			mBaseBitmap = null; // null bitmaps to release unused memory
 			mComposedBitmap = null;
-			mBaseBitmapEffect = null; // null effects to release unused memory
-			mAppliedEffect = null;
-			mEffects.clear(); // remove all references to effects and stickers
+			mBaseBitmapFilter = null; // null effects to release unused memory
+			mAppliedFilter = null;
+			mFilters.clear(); // remove all references to effects and stickers
 			mStickers.clear();
 			updateViewEditedImageView();
 			mEditedImageView.setVisibility(View.GONE);
@@ -616,25 +705,37 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			FilterPack filterPack = result.getA();
 			StickerPack stickerPack = result.getB();
 			if (!isAdded()) return;
+
+			// settings extra
+			Bundle extras = getActivity().getIntent().getExtras();
+			String configKey = SnaprImageEditFragmentActivity.EXTRA_EFFECT_SETTINGS;
+			@SuppressWarnings("unchecked") Map<String, SnaprSetting> suppliedSettings = (Map<String, SnaprSetting>) extras.getSerializable(configKey);
 			
 			if (filterPack != null) {
-				
-				Bundle extras = getActivity().getIntent().getExtras();
-				String configKey = SnaprImageEditFragmentActivity.EXTRA_EFFECT_CONFIGS;
-				@SuppressWarnings("unchecked") List<EffectConfig> configs = (List<EffectConfig>) extras.getSerializable(configKey);
-				
-				for (Filter filter : filterPack.getFilters()) {
-					EffectConfig config = configs != null ? findEffectConfig(configs, filter.getSlug()) : null;
-					if (config != null) mEffects.add(new SnaprEffect(filter, config));
-					else mEffects.add(new SnaprEffect(filter));
+				if (suppliedSettings != null) {
+					// filter settings
+					for (Filter filter : filterPack.getFilters()) {
+						SnaprSetting settings = suppliedSettings.get(filter.getSlug());
+						if (settings != null) filter.setSettings(settings);
+					}
 				}
 				
-				if (mEffects.size() != 0) mAppliedEffect = mEffects.get(0);
+				mFilters.addAll(filterPack.getFilters());
+				if (mFilters.size() != 0) mAppliedFilter = mFilters.get(0);
 				initialiseEffectViews();
 				updateViewEffects();
 			}
 			
 			if (stickerPack != null) {
+				if (suppliedSettings != null) {
+					// sticker settings
+					for (Sticker sticker : stickerPack.getStickers()) {
+						SnaprSetting settings = suppliedSettings.get(sticker.getSlug());
+						if (settings != null) sticker.setSettings(settings);
+					}
+
+				}
+				
 				mStickers.addAll(stickerPack.getStickers());
 				initialiseStickerViews();
 			}
@@ -661,8 +762,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		@Override protected Boolean doInBackground(Void... params) {
 			Thread.currentThread().setName(Thread.currentThread().getName() + " [" + getClass().getSimpleName() + "]");
 			if (DEBUG) JSATimeUtil.logTime();
-			for (SnaprEffect effect : mEffects)
-				effect.getFilter().loadImagesNoException(mContext, mFilterPackLocation, new SimpleOnImageLoadListener());
+			for (Filter filter : mFilters)
+				filter.loadImagesNoException(mContext, mFilterPackLocation, new SimpleOnImageLoadListener());
 			if (DEBUG) JSATimeUtil.logTime("filter pack images loaded");
 			for (Sticker sticker : mStickers)
 				sticker.loadImagesNoException(mContext, mStickerPackLocation, new SimpleOnImageLoadListener());
@@ -686,7 +787,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			} else if (parent instanceof Filter) {
 				mUiThreadHandler.post(new Runnable() {
 					@Override public void run() {
-						updateEffectView(new SnaprEffect((Filter) parent));
+						updateEffectView((Filter) parent);
 					}
 				});
 			}
@@ -713,16 +814,6 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	 * find effect config
-	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
-	private static EffectConfig findEffectConfig(List<EffectConfig> configs, String slug) {
-		for (EffectConfig config : configs)
-			if (config.mSlug.equals(slug)) return config;
-		return null;
-	}
-	
-	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * JNI library loader
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
@@ -730,4 +821,6 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		System.loadLibrary("snapr-jni");
 	}
 
+	
+	
 }

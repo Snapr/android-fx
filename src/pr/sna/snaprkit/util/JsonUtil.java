@@ -4,7 +4,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import nz.co.juliusspencer.android.JSAArrayUtil;
@@ -153,6 +156,16 @@ public abstract class JsonUtil {
 			else throw new IllegalArgumentException();
 		}
 		return result;
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * parse string as date
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	public static Date parseJsonDate(String json) throws ParseException {
+		// "2013-03-08 16:42:54 -0800"
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+		return formatter.parse(json);
 	}
 	
 }

@@ -14,13 +14,18 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.PixelFormat;
 import android.graphics.PointF;
 import android.graphics.PorterDuff;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
+import android.graphics.drawable.RotateDrawable;
+import android.os.Build;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -42,6 +47,8 @@ import android.view.SurfaceView;
  */
 
 public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Callback {
+	private static final boolean PRE_HONEYCOMB_DEVICE = Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB;
+	
 	private final List<TabletopGraphic> mBackgroundGraphics = new ArrayList<TabletopGraphic>();		// graphics that cannot directly being interacted with
 	private final List<TabletopGraphic> mForegroundGraphics = new ArrayList<TabletopGraphic>();		// graphics that may be directly interacted with
 	private TabletopThread mThread;
@@ -69,11 +76,13 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	private boolean mDrawGraphics;					// whether or not to draw graphics on the tabletop (during the update loop)
 	
 	private boolean mShowSpinner;					// whether or not to show the spinner on the tabletop
-	private Drawable mSpinnerDrawable;				// the drawable used to draw the spinner on the tabletop
+	private Drawable mSpinnerLayerDrawable;	// the drawable used to draw the spinner on the tabletop
 	private long mSpinnerStartTime;					// the system time (in milliseconds) the spinner was most recently started (used to control animation)
 	private float mSpinnerRotationSpeedFactor;		// the factor by which to control the rotation speed of the spinner
+	private int mSpinnerMargin = 10;				// the margin applied around the bounding box of the spinner
 	
 	private boolean mForceGraphicsBoundingBoxDraw;							// whether or not to force the graphics to draw their bounding boxes
+	
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * constants
@@ -83,7 +92,7 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	private static final long DEFAULT_NON_INTERACTION_TIMEOUT = 1000;
 	
 	private static final boolean DEBUG = false;
-	
+
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * constructors
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -118,8 +127,11 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		getHolder().setFormat(PixelFormat.TRANSPARENT);
 		
 		mSpinnerRotationSpeedFactor = getContext().getResources().getInteger(R.integer.progress_spinner_rotation_speed_percent) / 100f;
-		mSpinnerDrawable = getContext().getResources().getDrawable(R.drawable.snaprkitfx_sticker_progress);
-		mSpinnerDrawable.setBounds(10, 10, 10 + mSpinnerDrawable.getIntrinsicWidth(), 10 + mSpinnerDrawable.getIntrinsicHeight());
+		// set up the layers for the spinner drawable - use custom implementation on older devices to work around a bug with the pivot point
+		Drawable backgroundSpinnerDrawable = getResources().getDrawable(R.drawable.snaprkitfx_sticker_bg_progress);
+		Drawable outerSpinnerDrawable = PRE_HONEYCOMB_DEVICE ? new CenterRotateDrawable(getResources().getDrawable(R.drawable.snaprkitfx_spinner_outer), 0, 1080) : getResources().getDrawable(R.drawable.snaprkitfx_sticker_outer_progress);
+		Drawable innerSpinnerDrawable = PRE_HONEYCOMB_DEVICE ? new CenterRotateDrawable(getResources().getDrawable(R.drawable.snaprkitfx_spinner_inner), 720, 0) : getResources().getDrawable(R.drawable.snaprkitfx_sticker_inner_progress);
+		mSpinnerLayerDrawable = new LayerDrawable(new Drawable[] { backgroundSpinnerDrawable, outerSpinnerDrawable, innerSpinnerDrawable });
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -372,7 +384,12 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 	private boolean onTouchEventActionUp(MotionEvent event) {
-		if (mActiveGraphic == null) return true;
+		// if not sticker was selected, pin all items (triggering a render)
+		if (mActiveGraphic == null) {
+			pinAllGraphics();
+			return true;
+		}
+		
 		mActiveGraphic.onTouchEvent(event);
 		TabletopGraphic.State state = mActiveGraphic.getState();
 		startNonInteractionTimeout();
@@ -522,7 +539,7 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		
 		// return if the canvas is invalid
 		if (canvas == null) return;
-
+		
 		// clear the canvas
 		canvas.drawColor(0, PorterDuff.Mode.CLEAR);
 		
@@ -545,12 +562,12 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 			for (TabletopGraphic graphic : mForegroundGraphics) 
 				graphic.onDraw(canvas, null);
 		}
-		
+
 		// draw the spinner (if required)
 		if (!mShowSpinner) return;
 		int level = (int) (((mSpinnerStartTime - System.currentTimeMillis()) * mSpinnerRotationSpeedFactor) % 10000);
-		mSpinnerDrawable.setLevel(level);
-		mSpinnerDrawable.draw(canvas);
+		mSpinnerLayerDrawable.setLevel(level);
+		mSpinnerLayerDrawable.draw(canvas);
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -572,7 +589,11 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		mThread = null;
 	}
 
-	@Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) { }
+	@Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+		final int spinnerWidth = mSpinnerLayerDrawable.getIntrinsicWidth();
+		final int spinnerHeight = mSpinnerLayerDrawable.getIntrinsicHeight();
+		mSpinnerLayerDrawable.setBounds(width-spinnerWidth-mSpinnerMargin, height-spinnerHeight-mSpinnerMargin, width-mSpinnerMargin, height-mSpinnerMargin);
+	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * tabletop thread
@@ -724,6 +745,112 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		
 		public Bitmap getBitmap() {
 			return mBitmap;
+		}
+	}
+	
+	/*
+	 * 
+	 */
+	
+	/**
+	 * CenterRotateDrawable is an extension of RotateDrawable that forces the rotation to happen around a pivot point that coincides with the
+	 * center of the drawing bounds. This implementation is identical to RotateDrawable in the API 14, but doesn't use an internal state member
+	 * to keep track of the various variables. In stead, the required variables are declared as class members.
+	 *  
+	 * The reason for this is that on pre-ICS devices (probably pre-Honeycomb devices) the RotateDrawable does not take into account its bounds 
+	 * when performing the rotation of the canvas it draws on. As a result, the pivot point is always set with respect to (0, 0), even if the 
+	 * bounds include an offset from the left and/or top.
+	 * 
+	 * TODO: This implementation was made under the assumption that the internal state member of the super class isn't a requirement for this 
+	 * project. This may not generalise to other projects that have to deal with e.g. orientation changes. Currently, there's no guarantee in
+	 * terms of portability.  
+	 * 
+	 * @see: http://grepcode.com/file_/repository.grepcode.com/java/ext/com.google.android/android/2.3.7_r1/android/graphics/drawable/RotateDrawable.java/?v=diff&id2=4.0.1_r1
+	 * line: 86
+	 * 
+	 * @author mhelder
+	 */
+	private static class CenterRotateDrawable extends RotateDrawable {
+		private static final float MAX_LEVEL = 10000.0f;
+		
+		private float mToDegrees;
+		private float mFromDegrees;
+		private float mCurrentDegrees;
+		private Drawable mDrawable;
+		
+		
+		public CenterRotateDrawable(Drawable drawable, float fromDegrees, float toDegrees) {
+			super();
+			mFromDegrees = fromDegrees;
+			mToDegrees = toDegrees;
+			mDrawable = drawable;
+			mDrawable.setCallback(this);
+		}
+
+		@Override public void draw(Canvas canvas) {
+			int saveCount = canvas.save();
+
+	        Rect bounds = getBounds();
+	        // rotate canvas around the centerpoint of the bounds
+	        canvas.rotate(mCurrentDegrees, bounds.centerX(), bounds.centerY());
+
+	        mDrawable.draw(canvas);
+
+	        canvas.restoreToCount(saveCount);
+		}
+		
+		@Override public Drawable getDrawable() {
+			return mDrawable;
+		}
+		
+		@Override public int getChangingConfigurations() {
+			return mDrawable.getChangingConfigurations();
+		}
+		
+		@Override public void setAlpha(int alpha) {
+			mDrawable.setAlpha(alpha);
+		}
+		
+		@Override public void setColorFilter(ColorFilter cf) {
+			mDrawable.setColorFilter(cf);
+		}
+		
+		@Override public boolean getPadding(Rect padding) {
+			return mDrawable.getPadding(padding);
+		}
+		
+		@Override public boolean setVisible(boolean visible, boolean restart) {
+			return mDrawable.setVisible(visible, restart);
+		}
+		
+		@Override public boolean isStateful() {
+			return mDrawable.isStateful();
+		}
+		
+		@Override protected boolean onStateChange(int[] state) {
+			boolean changed = mDrawable.setState(state);
+			onBoundsChange(getBounds());
+			return changed;
+		}
+		
+		@Override protected boolean onLevelChange(int level) {
+			mDrawable.setLevel(level);
+			onBoundsChange(getBounds());
+			mCurrentDegrees = mFromDegrees + (mToDegrees - mFromDegrees) * ((float) level / MAX_LEVEL);
+			invalidateSelf();
+			return true;
+		}
+		
+		@Override protected void onBoundsChange(Rect bounds) {
+			mDrawable.setBounds(bounds.left, bounds.top, bounds.right, bounds.bottom);
+		}
+		
+		@Override public int getIntrinsicWidth() {
+			return mDrawable.getIntrinsicWidth();
+		}
+		
+		@Override public int getIntrinsicHeight() {
+			return mDrawable.getIntrinsicHeight();
 		}
 	}
 	
