@@ -75,6 +75,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private View mFilterContainerRoot;
 	private ViewGroup mFilterContainer;
 	private View mFilterButton;
+	private View mButtonDivider;
 	
 	private ViewGroup mStickerContainer;
 	private View mStickerContainerRoot;
@@ -121,6 +122,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		if (mFilterPackLocation == null) mFilterPackLocation = FILTER_PACK_PATH_DEFAULT;
 		if (mStickerPackLocation == null) mStickerPackLocation = STICKER_PACK_PATH_DEFAULT;
 		
+		mButtonDivider = getView().findViewById(R.id.button_divider);
 		mEditedImageView = (ImageView) getView().findViewById(R.id.edited_image);
 		mTabletop = (TabletopSurfaceView) getView().findViewById(R.id.tabletop);
 		mMessageTextView = (TextView) getView().findViewById(R.id.message_textview);
@@ -411,6 +413,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mFilterButton.setSelected(isShowingFilters);
 		mStickerButton.setVisibility(hasStickers ? View.VISIBLE : View.GONE);
 		mStickerButton.setSelected(!isShowingFilters);
+		// hide the divider if only one of two buttons is shown
+		mButtonDivider.setVisibility(hasFilters == hasStickers ? View.VISIBLE : View.GONE);
 		
 		// update the locked message
 		if (mAppliedFilter != null && isFilterLocked) mMessageTextView.setText(mAppliedFilter.getSettings().getUnlockMessage());
