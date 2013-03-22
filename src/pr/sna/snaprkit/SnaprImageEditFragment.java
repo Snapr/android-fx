@@ -228,7 +228,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		int padding = (int) (defaultPadding * scale);
 		int margin = (int) (defaultMargin * scale * scale);
 		mMessageTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, (defaultTextSize * scale));
-		mMessageTextView.setPadding(padding, (int) (padding / scale), padding, padding);
+		mMessageTextView.setPadding(padding, (int) (padding / scale / scale), padding, padding);
 		((MarginLayoutParams) mMessageTextView.getLayoutParams()).bottomMargin = margin;
 		((MarginLayoutParams) mMessageTextView.getLayoutParams()).leftMargin = margin;
 		((MarginLayoutParams) mMessageTextView.getLayoutParams()).rightMargin = margin;
