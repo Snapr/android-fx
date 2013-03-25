@@ -1,9 +1,9 @@
-package pr.sna.snaprkitfx.tabletop;
+package pr.sna.snaprkit.tabletop;
 
 import nz.co.juliusspencer.android.JSAGeometryUtil;
 import nz.co.juliusspencer.android.JSAMathUtil;
 import nz.co.juliusspencer.android.JSAMotionEventUtil;
-import pr.sna.snaprkitfx.R;
+import pr.sna.snaprkit.R;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -308,7 +308,7 @@ public class TabletopGraphic implements Cloneable {
 		mBoundingBoxPath.lineTo(mGeometryHelper.getCorner(0, mCenter).x, mGeometryHelper.getCorner(0, mCenter).y); 		// top left (again)
 		
 		// draw the bounding box
-		boolean forceBoundingBoxDraw = mForceBoundingBoxDraw && !(context instanceof ScaledDrawContext);
+		boolean forceBoundingBoxDraw = mForceBoundingBoxDraw && !(context instanceof ScaledDrawContext) && !isPinned;
 		if (!isDeleted && !isDisabled && !isPinned || forceBoundingBoxDraw) canvas.drawPath(mBoundingBoxPath, mBoundingBoxPaint);
 		
 		// draw the rotation button

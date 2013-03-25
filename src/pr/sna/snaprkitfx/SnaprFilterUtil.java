@@ -2,6 +2,7 @@ package pr.sna.snaprkitfx;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,7 +69,7 @@ public abstract class SnaprFilterUtil {
 				if (mode.mTag.equals(tag)) return mode;
 			throw new IllegalArgumentException("blend mode unknown: " + tag);
 		}
-		
+
 		public int getCompositeBlendMode() {
 			return mCompositeBlendMode;
 		}
@@ -84,11 +85,11 @@ public abstract class SnaprFilterUtil {
 		protected List<Filter> mFilters;
 		protected Bitmap mThumbnail;
 
-		public static FilterPack parse(Context context, String folder) throws IOException, JSONException {
+		public static FilterPack parse(Context context, String folder) throws IOException, JSONException, ParseException {
 			return parse(context, folder, true);
 		}
 
-		public static FilterPack parse(Context context, String folder, boolean loadImages) throws IOException, JSONException {
+		public static FilterPack parse(Context context, String folder, boolean loadImages) throws IOException, JSONException, ParseException {
 			if (context == null || folder == null) throw new IllegalArgumentException();
 			String file = JsonUtil.loadJsonFile(context, folder, "filter-pack.json");
 			JSONObject json = new JSONObject(file).getJSONObject("filter_pack");
@@ -98,14 +99,15 @@ public abstract class SnaprFilterUtil {
 			pack.mDescription = json.getString("description");
 			pack.mThumbnail = loadImages ? JsonUtil.loadAssetBitmap(context, folder, "thumb.png", "thumb@2x.png") : null;
 			pack.mFilters = new ArrayList<SnaprFilterUtil.Filter>();
-			
+
 			// add in the "original" filter
 			pack.mFilters.add(constructOriginalFilter(pack, context, folder));
-			
+
 			// add in all the filters defined in json
 			for (int i = 0; i < filters.length(); i++) {
-				String slug = ((JSONObject) filters.get(i)).getString("slug");
-				pack.mFilters.add(Filter.parse(context, folder, slug, loadImages));
+				JSONObject filter = (JSONObject) filters.get(i);
+				String slug = filter.getString("slug");
+				pack.mFilters.add(Filter.parse(context, filter, folder, slug, loadImages));
 			}
 
 			return pack;
@@ -141,7 +143,7 @@ public abstract class SnaprFilterUtil {
 			if (mThumbnail != null && listener != null) listener.onImageLoad(this, mThumbnail);
 			for (Filter filter : mFilters) filter.loadImages(context, folder, listener);
 		}
-		
+
 		private static Filter constructOriginalFilter(FilterPack pack, Context context, String folder) throws IOException {
 			Filter filter = new Filter();
 			filter.mSlug = context.getString(R.string.snaprkitfx_original);
@@ -149,6 +151,7 @@ public abstract class SnaprFilterUtil {
 			if (filter.mThumbnail == null) pack.mThumbnail = JsonUtil.loadAssetBitmap(context, folder, "thumb.png", "thumb@2x.png", false);
 			filter.mName = context.getString(R.string.snaprkitfx_original);
 			filter.mLayers = new ArrayList<SnaprFilterUtil.Layer>();
+			filter.mSettings = SnaprSetting.getDefaultSettings(filter.mSlug);
 			return filter;
 		}
 	}
@@ -162,8 +165,9 @@ public abstract class SnaprFilterUtil {
 		protected String mSlug;
 		protected List<Layer> mLayers;
 		protected Bitmap mThumbnail;
+		protected SnaprSetting mSettings;
 
-		private static Filter parse(Context context, String folder, String slug, boolean loadImages) throws JSONException, IOException {
+		private static Filter parse(Context context, JSONObject root, String folder, String slug, boolean loadImages) throws JSONException, IOException, ParseException {
 			String filterSlug = null;
 
 			try {
@@ -181,6 +185,9 @@ public abstract class SnaprFilterUtil {
 				for (int i = 0; i < layers.length(); i++)
 					filter.mLayers.add(Layer.parse(context, folder, (JSONObject) layers.get(i)));
 
+				// parse settings, or construct default (everything initialised to 'false' and 'null')
+				filter.mSettings = root.isNull("settings") ? SnaprSetting.getDefaultSettings(slug) : SnaprSetting.parse(context, root.getJSONObject("settings"), slug);
+
 				return filter;
 
 			} catch (JSONException exception) {
@@ -192,6 +199,9 @@ public abstract class SnaprFilterUtil {
 			} catch (RuntimeException exception) {
 				if (filterSlug == null) throw exception;
 				else throw new RuntimeException(exception.getMessage() + ": " + filterSlug, exception);
+			} catch (ParseException exception) {
+				if (filterSlug == null) throw exception;
+				else throw new IOException(exception.getMessage() + ": " + filterSlug);
 			}
 		}
 
@@ -205,6 +215,14 @@ public abstract class SnaprFilterUtil {
 
 		public Bitmap getThumbnail() {
 			return mThumbnail;
+		}
+		
+		public SnaprSetting getSettings() {
+			return mSettings;
+		}
+		
+		public void setSettings(SnaprSetting settings) {
+			mSettings = settings;
 		}
 
 		public void apply(Context context, Bitmap bitmap) throws IOException {
@@ -226,6 +244,21 @@ public abstract class SnaprFilterUtil {
 			if (mThumbnail == null) mThumbnail = JsonUtil.loadAssetBitmap(context, folder, "thumb.png", "thumb@2x.png");
 			if (mThumbnail != null && listener != null) listener.onImageLoad(this, mThumbnail);
 		}
+		
+		/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+		 * equals
+		 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+		@Override public int hashCode() {
+			return mSlug.hashCode();
+		}
+
+		@Override public boolean equals(Object o) {
+			if (!(o instanceof Filter)) return false;
+			Filter filter = (Filter) o;
+			return filter.getSlug().equals(mSlug);
+		}
+		
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -237,7 +270,7 @@ public abstract class SnaprFilterUtil {
 		protected BlendingMode mBlendingMode;
 		protected String mMaskImage;
 		protected String mImageFolder;
-		
+
 		private static Layer parse(Context context, String folder, JSONObject json) throws JSONException, IOException {
 			String type = json.getString("type");
 			if (type.equals("adjustment")) return AdjustmentLayer.parse(json).fill(json, folder);
@@ -269,8 +302,8 @@ public abstract class SnaprFilterUtil {
 			
 			// load the image mask (at the same size as the target bitmap)
 			Bitmap maskBitmapLarge = JsonUtil.loadLargerAssetBitmap(context, mImageFolder, mMaskImage, bitmap.getWidth(), bitmap.getHeight());
-			Bitmap maskBitmap = SnaprPhotoHelper.getResizedBitmap(maskBitmapLarge, bitmap.getHeight(), bitmap.getHeight(), true);
-			
+			Bitmap maskBitmap = SnaprPhotoHelper.getResizedBitmap(maskBitmapLarge, bitmap.getWidth(), bitmap.getHeight(), true);
+
 			// apply the overlay bitmap to the base bitmap using the loaded mask
 			CompositeEffect.applyImageMaskEffect(bitmap, overlayBitmap, maskBitmap, mOpacity / 100f, mBlendingMode.mCompositeBlendMode);
 			overlayBitmap.recycle();

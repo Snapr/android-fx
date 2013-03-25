@@ -1,13 +1,13 @@
-package pr.sna.snaprkitfx;
+package pr.sna.snaprkit;
 
 import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import nz.co.juliusspencer.android.JSAProgressDialogFragment;
-import pr.sna.snaprkitfx.SnaprEffect.EffectConfig;
-import pr.sna.snaprkitfx.SnaprImageEditFragment.FragmentListener;
+import pr.sna.snaprkit.SnaprImageEditFragment.FragmentListener;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -60,7 +60,7 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 	public static final String EXTRA_FILTER_PACK_PATH = "EXTRA_FILTER_PACK_PATH";
 	public static final String EXTRA_STICKER_PACK_PATH = "EXTRA_STICKER_PACK_PATH";
 	
-	public static final String EXTRA_EFFECT_CONFIGS = "EXTRA_EFFECT_CONFIGS";
+	public static final String EXTRA_EFFECT_SETTINGS = "EXTRA_EFFECT_SETTINGS";
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * constants: analytics
@@ -116,10 +116,10 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		if (builder.mFilterPackPath != null) intent.putExtra(EXTRA_FILTER_PACK_PATH, builder.mFilterPackPath);
 		if (builder.mStickerPackPath != null) intent.putExtra(EXTRA_STICKER_PACK_PATH, builder.mStickerPackPath);
 		
-		Serializable sEffectConfigs = builder.mEffectConfigs == null ? null : 
-			builder.mEffectConfigs instanceof Serializable ? (Serializable) builder.mEffectConfigs : 
-			new ArrayList<EffectConfig>(builder.mEffectConfigs);
-		if (sEffectConfigs != null) intent.putExtra(EXTRA_EFFECT_CONFIGS, sEffectConfigs);
+		Serializable effectSettings = builder.mSettings == null ? null : 
+			builder.mSettings instanceof Serializable ? (Serializable) builder.mSettings : 
+			new HashMap<String, SnaprSetting>(builder.mSettings);
+		if (effectSettings != null) intent.putExtra(EXTRA_EFFECT_SETTINGS, effectSettings);
 		
 		return intent;
 	}
@@ -228,7 +228,7 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		private final long mJustTookPhotoTimestamp;
 		private String mFilterPackPath;
 		private String mStickerPackPath;
-		private List<EffectConfig> mEffectConfigs;
+		private Map<String, SnaprSetting> mSettings;
 		
 		public Builder(File file, File outputFile) {
 			this(file, outputFile, false, -1);
@@ -251,8 +251,8 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 			return this;
 		}
 		
-		public Builder setEffectConfigs(List<EffectConfig> configs) {
-			mEffectConfigs = configs;
+		public Builder setSettings(Map<String, SnaprSetting> settings) {
+			mSettings = settings;
 			return this;
 		}
 	}

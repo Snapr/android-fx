@@ -114,7 +114,7 @@ public class SnaprPhotoHelper {
 					);
 		}
 
-		if (recycle) bitmapToCrop.recycle();
+		if (recycle && b != bitmapToCrop) bitmapToCrop.recycle();
 		
 		// Convert to ARGB_8888
 		return SnaprPhotoHelper.convertBitmapToARGB_8888(b, recycle);
