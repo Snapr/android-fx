@@ -32,7 +32,7 @@ public final class SnaprSetting implements Serializable {
 	private Date mShowDate;
 	private Date mHideDate;
 	
-	public SnaprSetting(String slug) {
+	/* package */ SnaprSetting(String slug) {
 		mSlug = slug;
 	}
 
