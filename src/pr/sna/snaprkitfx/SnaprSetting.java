@@ -1,4 +1,4 @@
-package pr.sna.snaprkit;
+package pr.sna.snaprkitfx;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -9,7 +9,7 @@ import java.util.Date;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import pr.sna.snaprkit.util.JsonUtil;
+import pr.sna.snaprkitfx.util.JsonUtil;
 import android.content.Context;
 
 /**

@@ -1,9 +1,9 @@
-package pr.sna.snaprkit.tabletop;
+package pr.sna.snaprkitfx.tabletop;
 
 import nz.co.juliusspencer.android.JSAGeometryUtil;
 import nz.co.juliusspencer.android.JSAMathUtil;
 import nz.co.juliusspencer.android.JSAMotionEventUtil;
-import pr.sna.snaprkit.R;
+import pr.sna.snaprkitfx.R;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;

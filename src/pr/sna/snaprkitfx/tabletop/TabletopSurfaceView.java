@@ -1,4 +1,4 @@
-package pr.sna.snaprkit.tabletop;
+package pr.sna.snaprkitfx.tabletop;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -8,7 +8,7 @@ import java.util.List;
 
 import nz.co.juliusspencer.android.JSAFileUtil;
 import nz.co.juliusspencer.android.JSAMotionEventUtil;
-import pr.sna.snaprkit.R;
+import pr.sna.snaprkitfx.R;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;

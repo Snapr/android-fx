@@ -1,4 +1,4 @@
-package pr.sna.snaprkit;
+package pr.sna.snaprkitfx;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,13 +9,14 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import nz.co.juliusspencer.android.JSADimensionUtil;
 import nz.co.juliusspencer.android.JSAFileUtil;
 import nz.co.juliusspencer.android.JSAImageUtil;
 import nz.co.juliusspencer.android.JSAMathUtil;
 import nz.co.juliusspencer.android.JSATuple;
-import pr.sna.snaprkit.SnaprFilterUtil.Filter;
-import pr.sna.snaprkit.tabletop.TabletopSurfaceView;
-import pr.sna.snaprkit.util.CameraUtil;
+import pr.sna.snaprkitfx.SnaprFilterUtil.Filter;
+import pr.sna.snaprkitfx.tabletop.TabletopSurfaceView;
+import pr.sna.snaprkitfx.util.CameraUtil;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.content.Context;
@@ -33,7 +34,6 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.FloatMath;
-import android.view.WindowManager;
 
 public class SnaprImageEditFragmentUtil {
 	
@@ -213,7 +213,7 @@ public class SnaprImageEditFragmentUtil {
 
 	/** Save the given original image by resizing and saving out to an expected (temporary) location. */
 	@SuppressLint("NewApi") public static Bitmap saveOriginalTempImage(Context context, String originalFilePath, long imageRequestTimestamp) {
-		@SuppressWarnings("deprecation") int length = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getWidth();
+		int length = JSADimensionUtil.getDefaultDisplayWidth(context);
 		
 		Options opts = new Options();
 		opts.inSampleSize = JSAImageUtil.getLoadLargerImageScale(new File(originalFilePath), length, length, false);

@@ -1,4 +1,4 @@
-package pr.sna.snaprkit;
+package pr.sna.snaprkitfx;
 
 import java.io.File;
 import java.io.Serializable;
@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import nz.co.juliusspencer.android.JSAProgressDialogFragment;
-import pr.sna.snaprkit.SnaprImageEditFragment.FragmentListener;
+import pr.sna.snaprkitfx.SnaprImageEditFragment.FragmentListener;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
