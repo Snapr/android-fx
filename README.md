@@ -40,6 +40,57 @@ To specify a different location, use the following methods on the SnaprKitFragme
 setFilterPackPath("filter_packs/example");
 setStickerPackPath("sticker_packs/example");
 
+Configuring Filters and Stickers
+----------------------
+
+Filters and stickers can be configured using two different approaches:
+
+1. At build time, by adding a "settings" object to the Json file declaring the filters/stickers.
+2. At runtime, by calling one of the static `SnaprImageEditFragmentActivity.startActivity(...)` methods and supplying a `Builder` instance with the desired settings.
+
+Example of a "settings" declaration in `filter-pack.json`:
+
+	{
+	    "name": "Bubble",
+	    "slug": "bubble",
+	    "settings":{
+	        "locked": true,
+	        "unlock_message":"You need 5,000 PINK points to unlock this filter. Play games to earn your points!",
+	        "hidden":true,
+			"show_date":"TIMESTAMP",
+			"hide_date":"TIMESTAMP"
+	    }
+	}
+	
+The expected format for `TIMESTAMP` is `2013-03-08 16:42:54 -0800`, which is parsed at startup of the module using the following pattern: `yyyy-MM-dd HH:mm:ss Z`. Failing to comply with this format will break the logic around when a sticker of filter may become available to the user.
+Also note that:
+
+- the `hidden` flag will override the `locked` setting. In other words, if a filter or sticker is flagged as both locked and hidden, it will simply not show up to the user.
+- the `locked` flag cannot be set without an appropriate `unlock_message`.
+- dates are optional.
+
+Specifying the settings for a specific filter or sticker at runtime (i.e. if an effect item should be unlocked because the user reached a certain number of points), is done by mapping the `slug` of the item to a `SnaprSetting` instance. The latter is a simple POJO that wraps the various settings that can be made and is also used for static settings declared in Json.
+It's up to the parent app to instantiate a `Map<String, SnarpSetting>` to hold the settings that should be applied at runtime. Generally, we'd recommend to use a `HashMap`, for fast lookups and to allow serialization. Internally, the app will convert other implementations to a `HashMap`, which guarantees that only one setting will ever exist for a specific filter or sticker.
+
+Example for constructing runtime settings for a filter or sticker:
+
+	SnaprSetting bubbleSetting = SnarpSetting.getSettings(<slug>, <locked>, <unlock_message>, <hidden>, <show_date>, <hide_date>);
+	Map<String, SnaprSetting> settings = new HashMap<String, SnaprSetting>();
+	settings.put(bubbleSetting.getSlug(), bubbleSetting);
+
+The formats for the various options are identical to the Json configuration.
+
+Once the settings have been set up, passing them on is made easy through the static `Builder` class that is required to invoke the `SnaprImageEditFragmentActivity`:
+
+	// construct a Builder:
+	Builder builder = new Builder(...);
+	// add settings:
+	builder.setSettings(settings);
+	
+	// start SnaprImageEditFragmentActivity (from another activity):
+	SnaprImageEditFragmentActivity.startActivity(this, builder);
+	// or start for result:
+	SnaprImageEditFragmentActivity.startActivityForResult(this, builder);
 
 Library assets
 ----------------------
