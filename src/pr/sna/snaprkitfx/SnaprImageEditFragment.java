@@ -197,7 +197,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		if (isPhotoTaken && photoTimestamp == -1) throw new IllegalArgumentException("time stamp of image request missing!");
 		
 		// tell the media scanner about the new file if the photo was taken, otherwise prepare the image immediately
-		if (isPhotoTaken) MediaScannerConnection.scanFile(SnaprKitApplication.getInstance(), new String[] { originalFile }, null,
+		if (isPhotoTaken) MediaScannerConnection.scanFile(getActivity().getApplicationContext(), new String[] { originalFile }, null,
 				new MediaScannerConnection.OnScanCompletedListener() {
 						public void onScanCompleted(String path, Uri uri) { onOriginalBitmapAvailable(originalFile, photoTimestamp); } });
 		else onOriginalBitmapAvailable(originalFile, photoTimestamp);

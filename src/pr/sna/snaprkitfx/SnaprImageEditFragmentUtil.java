@@ -61,7 +61,7 @@ public class SnaprImageEditFragmentUtil {
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
 	public static class SaveEditedBitmapToFileAsyncTask extends AsyncTask<Void, Void, JSATuple<File, Boolean>> {
-		private final Context mContext;
+		private final Context mApplicationContext;
 		private final String mOriginalFilePath;
 		private final String mSaveFilePath;
 		private final Filter mFilter;
@@ -71,7 +71,7 @@ public class SnaprImageEditFragmentUtil {
 		
 		public SaveEditedBitmapToFileAsyncTask(Context context, String originalFilePath, String saveFilenPath, Filter filter, TabletopSurfaceView tabletop) {
 			if (context == null || saveFilenPath == null || tabletop == null) throw new IllegalArgumentException();
-			mContext = context;
+			mApplicationContext = context.getApplicationContext();
 			mOriginalFilePath = originalFilePath;
 			mSaveFilePath = saveFilenPath;
 			mFilter = filter;
@@ -91,7 +91,7 @@ public class SnaprImageEditFragmentUtil {
 				baseDir.mkdirs();
 
 				// calculate the maximum number of bytes the bitmap can be
-				ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+				ActivityManager am = (ActivityManager) mApplicationContext.getSystemService(Context.ACTIVITY_SERVICE);
 				long deviceMemoryBytes = am.getMemoryClass() * JSAFileUtil.BYTES_PER_MB;
 				
 				// we allow a small number of concurrent images to fit within memory
@@ -126,14 +126,14 @@ public class SnaprImageEditFragmentUtil {
 				bitmap = mTabletop.drawOnBitmap(bitmap, true, mTabletopWidth, mTabletopHeight);
 				
 				// apply the effect to the bitmap (if required)
-				if (mFilter != null) mFilter.apply(mContext.getApplicationContext(), bitmap);
+				if (mFilter != null) mFilter.apply(mApplicationContext, bitmap);
 				
 				// save the bitmap to file
 				FileOutputStream fos = new FileOutputStream(file.getAbsolutePath());
 				bitmap.compress(CompressFormat.JPEG, 100, fos);
 
 				// tell the media scanner about the new file so that it is immediately available to the user.
-				MediaScannerConnection.scanFile(SnaprKitApplication.getInstance(), new String[] { file.toString() }, null, null);
+				MediaScannerConnection.scanFile(mApplicationContext, new String[] { file.toString() }, null, null);
 				
 			} catch (Exception exception) {
 				exception.printStackTrace();
@@ -280,7 +280,7 @@ public class SnaprImageEditFragmentUtil {
 				String sortOrder = MediaStore.Images.Media.DATE_ADDED + " DESC";
 				
 				// execute query
-		        cursor = SnaprKitApplication.getInstance().getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, proj, selection, selectionArgs, sortOrder);
+		        cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, proj, selection, selectionArgs, sortOrder);
 		        cursor.moveToFirst();
 				while(!cursor.isAfterLast()) {
 					orientations.add(cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media.ORIENTATION)));
@@ -313,7 +313,7 @@ public class SnaprImageEditFragmentUtil {
 				// Tell the media scanner about the new file so that it is
 				// immediately available to the user.
 				MediaScannerConnection.scanFile(
-						SnaprKitApplication.getInstance(),
+						context.getApplicationContext(),
 						new String[] { originalFilePath.toString() }, null,
 						new MediaScannerConnection.OnScanCompletedListener() {
 							public void onScanCompleted(String path, Uri uri) {
