@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="pr.sna.snaprkitfx"
-	android:versionCode="1"
-	android:versionName="1.0" >
+    package="pr.sna.snaprkitfx"
+    android:versionCode="1"
+    android:versionName="1.0" >
 
-	<!-- SnaprKitFX: Minimum SDK version, required -->
-	<uses-sdk android:minSdkVersion="8" />
+    <!-- SnaprKitFX: Minimum SDK version, required -->
+    <uses-sdk android:minSdkVersion="8" />
 
-	<application android:theme="@style/Application.Theme" >
+    <!-- SnaprKitFX: Nothing to declare here -->
+    <application />
 
-		<!-- SnaprKitFX: Activities, required -->
-		<activity
-			android:name="pr.sna.snaprkitfx.SnaprImageEditFragmentActivity"
-			android:configChanges="keyboardHidden|orientation"
-			android:screenOrientation="portrait"
-			android:theme="@style/Application.Theme.NoTitleBar" />
-	</application>
+    <!-- SnaprKitFX: Activities												 		-->
+    <!-- Add the following definition to the parent project's AndroidManifest.xml: 	-->
+    
+    <!-- <activity																	-->
+    <!-- 	android:name="pr.sna.snaprkitfx.SnaprImageEditFragmentActivity"			-->
+    <!-- 	android:configChanges="keyboardHidden|orientation"						-->
+    <!-- 	android:screenOrientation="portrait"									-->
+    <!-- 	android:theme="@style/Application.Theme.NoTitleBar" />					-->
 
 </manifest>
