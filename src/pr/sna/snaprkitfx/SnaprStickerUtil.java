@@ -47,7 +47,7 @@ public abstract class SnaprStickerUtil {
 			StickerPack pack = new StickerPack();
 			pack.mName = json.getString("name");
 			pack.mDescription = json.getString("description");
-			pack.mThumbnail = loadImages ? JsonUtil.loadAssetBitmap(context, folder, "thumb.png", "thumb@2x.png", false) : null;
+			pack.mThumbnail = loadImages ? JsonUtil.loadScaledAssetBitmap(context, folder, "thumb@2x.png", false) : null;
 			pack.mStickers = new ArrayList<SnaprStickerUtil.Sticker>();
 			
 			ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
@@ -85,7 +85,7 @@ public abstract class SnaprStickerUtil {
 		
 		public void loadImages(Context context, String folder, OnImageLoadListener listener) throws IOException {
 			if (folder == null) throw new IllegalArgumentException();
-			if (mThumbnail == null) mThumbnail = JsonUtil.loadAssetBitmap(context, folder, "thumb.png", "thumb@2x.png");
+			if (mThumbnail == null) mThumbnail = JsonUtil.loadScaledAssetBitmap(context, folder, "thumb@2x.png");
 			if (mThumbnail != null && listener != null) listener.onImageLoad(this, mThumbnail);
 			for (Sticker sticker : mStickers) sticker.loadImages(context, folder, listener);
 		}
@@ -120,7 +120,7 @@ public abstract class SnaprStickerUtil {
 				sticker.mOpacity = json.getInt("opacity");
 				sticker.mBlendingMode = BlendingMode.getBlendingMode(json.getString("blending_mode"));
 				sticker.mImage = loadImages ? loadImageBitmap(context, folder, sticker.mSlug, sticker.mMaxImageBytes, sticker.mOpacity, sticker.mBlendingMode) : null;
-				sticker.mThumbnail = loadImages ? JsonUtil.loadAssetBitmap(context, thumbnailFolder, sticker.mSlug + ".png", sticker.mSlug + "@2x.png") : null;
+				sticker.mThumbnail = loadImages ? JsonUtil.loadScaledAssetBitmap(context, thumbnailFolder, sticker.mSlug + "@2x.png") : null;
 				
 				// parse settings, or construct default (everything initialised to 'false' and 'null')
 				sticker.mSettings = json.isNull("settings") ? SnaprSetting.getDefaultSettings(stickerSlug) : SnaprSetting.parse(context, json.getJSONObject("settings"), stickerSlug);
@@ -182,7 +182,7 @@ public abstract class SnaprStickerUtil {
 			String thumbnailFolder = folder + File.separator + "thumbs";
 			if (mImage == null) mImage = loadImageBitmap(context, folder, mSlug, mMaxImageBytes, mOpacity, mBlendingMode);
 			if (mImage != null && listener != null) listener.onImageLoad(this, mThumbnail);
-			if (mThumbnail == null) mThumbnail = JsonUtil.loadAssetBitmap(context, thumbnailFolder, mSlug + ".png", mSlug + "@2x.png");
+			if (mThumbnail == null) mThumbnail = JsonUtil.loadScaledAssetBitmap(context, thumbnailFolder, mSlug + "@2x.png");
 			if (mThumbnail != null && listener != null) listener.onImageLoad(this, mImage);
 		}
 		

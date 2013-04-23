@@ -19,6 +19,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import pr.sna.snaprkitfx.SnaprPhotoHelper;
+
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
@@ -101,14 +103,19 @@ public abstract class JsonUtil {
 		return loadAssetBitmap(context, folder, filename, true);
 	}
 	
-	public static Bitmap loadAssetBitmap(Context context, String folder, String filenameMdpi, String filenameHdpi) throws IOException {
-		return loadAssetBitmap(context, folder, filenameMdpi, filenameHdpi, true);
+	public static Bitmap loadScaledAssetBitmap(Context context, String folder, String filename) throws IOException {
+		return loadScaledAssetBitmap(context, folder, filename, true);
 	}
 	
-	public static Bitmap loadAssetBitmap(Context context, String folder, String filenameMdpi, String filenameHdpi, boolean required) throws IOException {
+	public static Bitmap loadScaledAssetBitmap(Context context, String folder, String filename, boolean required) throws IOException {
 		int density = context.getResources().getDisplayMetrics().densityDpi;
-		String filename = density <= DisplayMetrics.DENSITY_MEDIUM ? filenameMdpi : filenameHdpi;
-		return loadAssetBitmap(context, folder, filename, required);
+		Bitmap bm = loadAssetBitmap(context, folder, filename, required);
+		if (density <= DisplayMetrics.DENSITY_MEDIUM && bm != null)
+		{
+			return SnaprPhotoHelper.getResizedBitmap(bm, bm.getHeight()/2, bm.getWidth()/2, true);
+		}
+		
+		return bm;
 	}
 	
 	public static Bitmap loadAssetBitmap(Context context, String folder, String filename, boolean required) throws IOException {

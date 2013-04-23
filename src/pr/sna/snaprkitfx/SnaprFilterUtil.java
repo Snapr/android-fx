@@ -97,7 +97,7 @@ public abstract class SnaprFilterUtil {
 			FilterPack pack = new FilterPack();
 			pack.mName = json.getString("name");
 			pack.mDescription = json.getString("description");
-			pack.mThumbnail = loadImages ? JsonUtil.loadAssetBitmap(context, folder, "thumb.png", "thumb@2x.png") : null;
+			pack.mThumbnail = loadImages ? JsonUtil.loadScaledAssetBitmap(context, folder, "thumb@2x.png") : null;
 			pack.mFilters = new ArrayList<SnaprFilterUtil.Filter>();
 
 			// add in the "original" filter
@@ -139,7 +139,7 @@ public abstract class SnaprFilterUtil {
 
 		public void loadImages(Context context, String folder, OnImageLoadListener listener) throws IOException {
 			if (folder == null) throw new IllegalArgumentException();
-			if (mThumbnail == null) mThumbnail = JsonUtil.loadAssetBitmap(context, folder, "thumb.png", "thumb@2x.png");
+			if (mThumbnail == null) mThumbnail = JsonUtil.loadScaledAssetBitmap(context, folder, "thumb@2x.png");
 			if (mThumbnail != null && listener != null) listener.onImageLoad(this, mThumbnail);
 			for (Filter filter : mFilters) filter.loadImages(context, folder, listener);
 		}
@@ -147,8 +147,8 @@ public abstract class SnaprFilterUtil {
 		private static Filter constructOriginalFilter(FilterPack pack, Context context, String folder) throws IOException {
 			Filter filter = new Filter();
 			filter.mSlug = context.getString(R.string.snaprkitfx_original);
-			filter.mThumbnail = pack.mThumbnail != null ? pack.mThumbnail : JsonUtil.loadAssetBitmap(context, folder, "original-thumb.png", "original-thumb@2x.png", false);
-			if (filter.mThumbnail == null) pack.mThumbnail = JsonUtil.loadAssetBitmap(context, folder, "thumb.png", "thumb@2x.png", false);
+			filter.mThumbnail = pack.mThumbnail != null ? pack.mThumbnail : JsonUtil.loadScaledAssetBitmap(context, folder, "original-thumb@2x.png", false);
+			if (filter.mThumbnail == null) pack.mThumbnail = JsonUtil.loadScaledAssetBitmap(context, folder, "thumb@2x.png", false);
 			filter.mName = context.getString(R.string.snaprkitfx_original);
 			filter.mLayers = new ArrayList<SnaprFilterUtil.Layer>();
 			filter.mSettings = SnaprSetting.getDefaultSettings(filter.mSlug);
@@ -180,7 +180,7 @@ public abstract class SnaprFilterUtil {
 				Filter filter = new Filter();
 				filter.mName = json.getString("name");
 				filter.mSlug = json.getString("slug");
-				filter.mThumbnail = loadImages ? JsonUtil.loadAssetBitmap(context, folder, "thumb.png", "thumb@2x.png") : null;
+				filter.mThumbnail = loadImages ? JsonUtil.loadScaledAssetBitmap(context, folder, "thumb@2x.png") : null;
 				filter.mLayers = new ArrayList<SnaprFilterUtil.Layer>();
 				for (int i = 0; i < layers.length(); i++)
 					filter.mLayers.add(Layer.parse(context, folder, (JSONObject) layers.get(i)));
@@ -241,7 +241,7 @@ public abstract class SnaprFilterUtil {
 		public void loadImages(Context context, String folder, OnImageLoadListener listener) throws IOException {
 			if (context == null || folder == null) throw new IllegalArgumentException();
 			folder = folder + File.separator + "filters" + File.separator + mSlug;
-			if (mThumbnail == null) mThumbnail = JsonUtil.loadAssetBitmap(context, folder, "thumb.png", "thumb@2x.png");
+			if (mThumbnail == null) mThumbnail = JsonUtil.loadScaledAssetBitmap(context, folder, "thumb@2x.png");
 			if (mThumbnail != null && listener != null) listener.onImageLoad(this, mThumbnail);
 		}
 		
