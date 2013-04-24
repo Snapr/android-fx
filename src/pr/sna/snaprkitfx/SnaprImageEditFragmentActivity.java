@@ -62,6 +62,8 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 	
 	public static final String EXTRA_EFFECT_SETTINGS = "EXTRA_EFFECT_SETTINGS";
 	
+	public static final String EXTRA_IMAGE_ASPECT_RATIO = "EXTRA_IMAGE_ASPECT_RATIO";
+	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * constants: analytics
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -112,6 +114,7 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		intent.putExtra(EXTRA_FILEPATH, builder.mFile.getAbsolutePath());
 		intent.putExtra(EXTRA_OUTPUT, builder.mOutputFile.getAbsolutePath());
 		intent.putExtra(EXTRA_TOOK_PHOTO, builder.mJustTookPhoto);
+		if (builder.mImageAspectRatio != 0f) intent.putExtra(EXTRA_IMAGE_ASPECT_RATIO, builder.mImageAspectRatio);
 		if (builder.mJustTookPhoto) intent.putExtra(EXTRA_TOOK_PHOTO_TIMESTAMP, builder.mJustTookPhotoTimestamp);
 		if (builder.mFilterPackPath != null) intent.putExtra(EXTRA_FILTER_PACK_PATH, builder.mFilterPackPath);
 		if (builder.mStickerPackPath != null) intent.putExtra(EXTRA_STICKER_PACK_PATH, builder.mStickerPackPath);
@@ -228,6 +231,7 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		private final long mJustTookPhotoTimestamp;
 		private String mFilterPackPath;
 		private String mStickerPackPath;
+		private float mImageAspectRatio;
 		private Map<String, SnaprSetting> mSettings;
 		
 		public Builder(File file, File outputFile) {
@@ -248,6 +252,11 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		
 		public Builder setStickerPackPath(String path) {
 			mStickerPackPath = path;
+			return this;
+		}
+		
+		public Builder setImageAspectRatio(float imageAspectRatio) {
+			mImageAspectRatio = imageAspectRatio;
 			return this;
 		}
 		

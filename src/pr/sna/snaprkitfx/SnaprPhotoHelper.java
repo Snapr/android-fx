@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Bitmap.Config;
 import android.os.Environment;
+import android.util.Log;
 
 /**
  * Some useful methods for dealing with taking photos
@@ -91,31 +92,38 @@ public class SnaprPhotoHelper {
 		return result;
 	}
 	// ---------------------------------
-	public static Bitmap cropBitmap(Bitmap bitmapToCrop, boolean recycle) {
-		
+	public static Bitmap cropBitmap(Bitmap bitmapToCrop, double cropAreaAspectRatio, boolean recycle) {
+
 		Bitmap b;
-		
-		if(bitmapToCrop.getWidth() > bitmapToCrop.getHeight()) {
-			// Landscape
-			b = Bitmap.createBitmap(
-					bitmapToCrop, 
-					bitmapToCrop.getWidth()/2 - bitmapToCrop.getHeight()/2,
-					0,
-					bitmapToCrop.getHeight(), 
-					bitmapToCrop.getHeight()
-					);
+		int x;
+		int y;
+		int width;
+		int height;
+
+		Log.d("SNAPRKIT", "Crop aspect ratio is: " + cropAreaAspectRatio);
+
+		if (bitmapToCrop.getWidth() / bitmapToCrop.getHeight() >= cropAreaAspectRatio) {
+			width =  (int) (bitmapToCrop.getHeight() * cropAreaAspectRatio);
+			height = bitmapToCrop.getHeight();
+			x = (bitmapToCrop.getWidth() - width) / 2;
+			y = 0;
 		} else {
-			b = Bitmap.createBitmap(
-					bitmapToCrop,
-					0, 
-					bitmapToCrop.getHeight()/2 - bitmapToCrop.getWidth()/2,
-					bitmapToCrop.getWidth(),
-					bitmapToCrop.getWidth() 
-					);
+			width = bitmapToCrop.getWidth();
+			height = (int) (bitmapToCrop.getWidth() / cropAreaAspectRatio);
+			x = 0;
+			y = (bitmapToCrop.getHeight() - height) / 2;
 		}
 
-		if (recycle && b != bitmapToCrop) bitmapToCrop.recycle();
-		
+		b = Bitmap.createBitmap(
+				bitmapToCrop, 
+				x,
+				y,
+				width, 
+				height
+				);
+
+		if (recycle) bitmapToCrop.recycle();
+
 		// Convert to ARGB_8888
 		return SnaprPhotoHelper.convertBitmapToARGB_8888(b, recycle);
 	}

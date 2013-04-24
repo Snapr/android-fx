@@ -60,6 +60,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private String mFilterPackLocation = FILTER_PACK_PATH_DEFAULT;		// the location (under assets) where the filter packs will be loaded from
 	private String mStickerPackLocation = STICKER_PACK_PATH_DEFAULT;	// the location (under assets) where the sticker packs will be loaded from
 	
+	private float mImageAspectRatio = 1.0f;								// The desired image aspect ratio for the image
+	
 	private Handler mUiThreadHandler;			// handler to run actions on the ui thread
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -121,6 +123,9 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		
 		if (mFilterPackLocation == null) mFilterPackLocation = FILTER_PACK_PATH_DEFAULT;
 		if (mStickerPackLocation == null) mStickerPackLocation = STICKER_PACK_PATH_DEFAULT;
+		
+		mImageAspectRatio = extras.getFloat(SnaprImageEditFragmentActivity.EXTRA_IMAGE_ASPECT_RATIO);
+		if (mImageAspectRatio == 0) mImageAspectRatio = 1.0f;  
 		
 		mButtonDivider = getView().findViewById(R.id.button_divider);
 		mEditedImageView = (ImageView) getView().findViewById(R.id.edited_image);
@@ -253,7 +258,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
 	private void onOriginalBitmapAvailable(String originalFilepath, long photoTimestamp) {
-		mBaseBitmap = SnaprImageEditFragmentUtil.saveOriginalTempImage(getActivity(), originalFilepath, photoTimestamp);
+		mBaseBitmap = SnaprImageEditFragmentUtil.saveOriginalTempImage(getActivity(), originalFilepath, mImageAspectRatio, photoTimestamp);
 		if (mBaseBitmap == null) {
 			Toast.makeText(getActivity(), R.string.snaprkitfx_unable_to_load_image_try_another_, Toast.LENGTH_SHORT).show();
 			mFragmentListener.onCancel();		
@@ -655,7 +660,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private class SaveEditedBitmapToFileAsyncTask extends SnaprImageEditFragmentUtil.SaveEditedBitmapToFileAsyncTask {
 
 		public SaveEditedBitmapToFileAsyncTask() {
-			super(getActivity(), mOriginalFile.getAbsolutePath(), mSaveFile.getAbsolutePath(), mAppliedFilter, mTabletop);
+			super(getActivity(), mOriginalFile.getAbsolutePath(), mSaveFile.getAbsolutePath(), mImageAspectRatio, mAppliedFilter, mTabletop);
 		}
 
 		@Override protected void onPreExecute() {

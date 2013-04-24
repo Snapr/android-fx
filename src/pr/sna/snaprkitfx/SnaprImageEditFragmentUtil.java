@@ -68,12 +68,14 @@ public class SnaprImageEditFragmentUtil {
 		private final TabletopSurfaceView mTabletop;
 		private final int mTabletopWidth;
 		private final int mTabletopHeight;
+		private final float mImageAspectRatio;
 		
-		public SaveEditedBitmapToFileAsyncTask(Context context, String originalFilePath, String saveFilenPath, Filter filter, TabletopSurfaceView tabletop) {
+		public SaveEditedBitmapToFileAsyncTask(Context context, String originalFilePath, String saveFilenPath, float imageAspectRatio, Filter filter, TabletopSurfaceView tabletop) {
 			if (context == null || saveFilenPath == null || tabletop == null) throw new IllegalArgumentException();
 			mApplicationContext = context.getApplicationContext();
 			mOriginalFilePath = originalFilePath;
 			mSaveFilePath = saveFilenPath;
+			mImageAspectRatio = imageAspectRatio;
 			mFilter = filter;
 			mTabletop = tabletop;
 			mTabletopWidth = tabletop.getWidth();
@@ -120,7 +122,7 @@ public class SnaprImageEditFragmentUtil {
 				Bitmap bitmap = JSAImageUtil.loadImageFile(new File(mOriginalFilePath), opts);
 				
 				// crop the bitmap to square
-				bitmap = SnaprPhotoHelper.cropBitmap(bitmap, true);
+				bitmap = SnaprPhotoHelper.cropBitmap(bitmap, mImageAspectRatio, true);
 
 				// draw the stickers on the bitmap
 				bitmap = mTabletop.drawOnBitmap(bitmap, true, mTabletopWidth, mTabletopHeight);
@@ -212,7 +214,7 @@ public class SnaprImageEditFragmentUtil {
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 	/** Save the given original image by resizing and saving out to an expected (temporary) location. */
-	@SuppressLint("NewApi") public static Bitmap saveOriginalTempImage(Context context, String originalFilePath, long imageRequestTimestamp) {
+	@SuppressLint("NewApi") public static Bitmap saveOriginalTempImage(Context context, String originalFilePath, float imageAspectRatio, long imageRequestTimestamp) {
 		int length = JSADimensionUtil.getDefaultDisplayWidth(context);
 		
 		Options opts = new Options();
@@ -326,7 +328,7 @@ public class SnaprImageEditFragmentUtil {
 			e1.printStackTrace();
 		}
 
-		bitmap = SnaprPhotoHelper.cropBitmap(bitmap, true);
+		bitmap = SnaprPhotoHelper.cropBitmap(bitmap, imageAspectRatio, true);
 		if (!saveTempImage(bitmap)) return null;
 
 		return bitmap;
