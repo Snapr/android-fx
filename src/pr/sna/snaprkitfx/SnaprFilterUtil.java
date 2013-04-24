@@ -374,7 +374,8 @@ public abstract class SnaprFilterUtil {
 		@Override public void applyInner(Context context, Bitmap bitmap) throws IOException {
 			if (DEBUG) Log.i(LOG_TAG, "applying image effect: " + mOpacity / 100f + " " + mBlendingMode.mCompositeBlendMode);
 			Bitmap imageBitmapLarge = JsonUtil.loadLargerAssetBitmap(context, mImageFolder, mImage, bitmap.getWidth(), bitmap.getHeight());
-			Bitmap imageBitmap = SnaprPhotoHelper.getResizedBitmap(imageBitmapLarge, bitmap.getWidth(), bitmap.getHeight(), true);
+			Bitmap imageBitmap = SnaprPhotoHelper.getResizedBitmap(imageBitmapLarge, bitmap.getHeight(), bitmap.getWidth(), true);
+			if (DEBUG) Log.i(LOG_TAG, "image effect: source image " + bitmap.getWidth()+"," + bitmap.getHeight() + " overlay image: " + imageBitmap.getWidth() + "," + imageBitmap.getHeight());
 			CompositeEffect.applyImageEffect(bitmap, imageBitmap, mOpacity / 100f, mBlendingMode.mCompositeBlendMode);
 			imageBitmap.recycle();
 			System.gc();
