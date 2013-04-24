@@ -428,7 +428,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		
 		// update the next button
 		boolean isNextButton = hasStickers && hasFilters && isShowingFilters;
-		int resourceId = isNextButton ? R.drawable.snaprkitfx_btn_next_normal : R.drawable.snaprkitfx_btn_tick;
+		int resourceId = isNextButton ? R.drawable.snaprkitfx_btn_next : R.drawable.snaprkitfx_btn_tick;
 		mNextButton.setBackgroundResource(resourceId);
 		mNextButton.setEnabled(isNextButton || (!isFilterLocked && !isStickerLocked));
 		
