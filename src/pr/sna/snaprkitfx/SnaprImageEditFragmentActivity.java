@@ -21,6 +21,7 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.Window;
 import android.widget.TextView;
@@ -60,6 +61,7 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 	public static final String EXTRA_FILTER_PACK_PATH = "EXTRA_FILTER_PACK_PATH";
 	public static final String EXTRA_STICKER_PACK_PATH = "EXTRA_STICKER_PACK_PATH";
 	
+	public static final String EXTRA_LAUNCH_MODE = "EXTRA_LAUNCH_MODE";
 	public static final String EXTRA_EFFECT_SETTINGS = "EXTRA_EFFECT_SETTINGS";
 	
 	public static final String EXTRA_IMAGE_ASPECT_RATIO = "EXTRA_IMAGE_ASPECT_RATIO";
@@ -118,6 +120,7 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		if (builder.mJustTookPhoto) intent.putExtra(EXTRA_TOOK_PHOTO_TIMESTAMP, builder.mJustTookPhotoTimestamp);
 		if (builder.mFilterPackPath != null) intent.putExtra(EXTRA_FILTER_PACK_PATH, builder.mFilterPackPath);
 		if (builder.mStickerPackPath != null) intent.putExtra(EXTRA_STICKER_PACK_PATH, builder.mStickerPackPath);
+		intent.putExtra(EXTRA_LAUNCH_MODE, builder.mLaunchMode.name());
 		
 		Serializable effectSettings = builder.mSettings == null ? null : 
 			builder.mSettings instanceof Serializable ? (Serializable) builder.mSettings : 
@@ -233,6 +236,8 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		private String mStickerPackPath;
 		private float mImageAspectRatio;
 		private Map<String, SnaprSetting> mSettings;
+		// default to filters being selected
+		private LaunchMode mLaunchMode = LaunchMode.FILTERS;
 		
 		public Builder(File file, File outputFile) {
 			this(file, outputFile, false, -1);
@@ -264,8 +269,48 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 			mSettings = settings;
 			return this;
 		}
+		
+		/** 
+		 * Note that this does not check whether the mode is actually available. In other words: it's up to the caller to ensure
+		 * that if {@link LaunchMode#STICKERS} is set, {@link #setStickerPackPath(String)} is also called with a valid value.
+		 */
+		public Builder setLaunchMode(LaunchMode mode) {
+			if (mode == null) throw new IllegalArgumentException("mode cannot be null; use either LaunchMode.FILTERS or LaunchMode.STICKERS");
+			mLaunchMode = mode;
+			return this;
+		}
 	}
 
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	 * cancel dialog fragment
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	/** A simple enum that allows the initially selected tab (stickers vs. filters) to be configured using {@link Builder#setLaunchMode(LaunchMode)}.*/
+	public static enum LaunchMode {
+		FILTERS ("filters"),
+		STICKERS ("stickers");
+		
+		private final String mName;
+		
+		LaunchMode(String name) {
+			mName = name;
+		}
+		
+		public String getName() {
+			return mName;
+		}
+		
+		/** Returns the {@link LaunchMode} matching the given name (cases are ignored). Throws an {@link IllegalArgumentException} if no match is found. */
+		public static LaunchMode parse(String name) {
+			if (TextUtils.isEmpty(name)) throw new IllegalArgumentException("Unsupported mode value: " + name);
+			for (LaunchMode mode : values()) {
+				if (!mode.mName.equalsIgnoreCase(name)) continue;
+				return mode;
+			}
+			throw new IllegalArgumentException("No match found for mode value: " + name);
+		}
+	}
+	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * cancel dialog fragment
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */

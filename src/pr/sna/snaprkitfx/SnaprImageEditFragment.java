@@ -13,6 +13,7 @@ import nz.co.juliusspencer.android.JSATuple;
 import pr.sna.snaprkitfx.SnaprFilterUtil.Filter;
 import pr.sna.snaprkitfx.SnaprFilterUtil.FilterPack;
 import pr.sna.snaprkitfx.SnaprFilterUtil.OnImageLoadListener;
+import pr.sna.snaprkitfx.SnaprImageEditFragmentActivity.LaunchMode;
 import pr.sna.snaprkitfx.SnaprStickerUtil.Sticker;
 import pr.sna.snaprkitfx.SnaprStickerUtil.StickerPack;
 import pr.sna.snaprkitfx.tabletop.TabletopSurfaceView;
@@ -33,6 +34,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.ViewGroup.MarginLayoutParams;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -63,6 +66,12 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private float mImageAspectRatio = 1.0f;								// The desired image aspect ratio for the image
 	
 	private Handler mUiThreadHandler;			// handler to run actions on the ui thread
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * runnable
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	private Runnable mHideStickerLockMessageRunnable;
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * views
@@ -99,6 +108,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	
 	private static final float MAX_NEW_GRAPHIC_FACTOR = 0.65f; // no newly added graphic will have a width or height greater than image factor
 
+	private static final long HIDE_LOCK_MESSAGE_DELAY_MS = 4000;
+	
 	private static enum InteractionState {
 		SHOWING_FILTERS,
 		SHOWING_STICKERS
@@ -158,12 +169,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mFilterButton = getView().findViewById(R.id.filter_button);
 		mFilterButton.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View v) {
-				mInteractionState = InteractionState.SHOWING_FILTERS;
-				mTabletop.setInteractionEnabled(false);
-				mTabletop.pinAllGraphics();
-				updateViewEditedImageView();
-				updateViewProgress();
-				updateView();
+				onFilterButtonClick();
 			}
 		});
 		
@@ -171,11 +177,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mStickerButton = getView().findViewById(R.id.sticker_button);
 		mStickerButton.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View v) {
-				mInteractionState = InteractionState.SHOWING_STICKERS;
-				mTabletop.setInteractionEnabled(true);
-				updateViewEditedImageView();
-				updateViewProgress();
-				updateView();
+				onStickerButtonClick();
 			}
 		});
 		
@@ -187,6 +189,12 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		final String originalFile = getActivity().getIntent().getStringExtra(SnaprImageEditFragmentActivity.EXTRA_FILEPATH);
 		final boolean isPhotoTaken = getActivity().getIntent().getBooleanExtra(SnaprImageEditFragmentActivity.EXTRA_TOOK_PHOTO, true);
 		final long photoTimestamp = getActivity().getIntent().getLongExtra(SnaprImageEditFragmentActivity.EXTRA_TOOK_PHOTO_TIMESTAMP, -1);
+		
+		// determine launch mode (as exposed to the parent app); internally known as interaction state
+		String launchModeString = getActivity().getIntent().getStringExtra(SnaprImageEditFragmentActivity.EXTRA_LAUNCH_MODE);
+		LaunchMode launchMode = launchModeString != null ? LaunchMode.valueOf(launchModeString) : LaunchMode.FILTERS;
+		if (launchMode == LaunchMode.FILTERS) mInteractionState = InteractionState.SHOWING_FILTERS;
+		else /* launchMode == LaunchMode.STICKERS */ mInteractionState = InteractionState.SHOWING_STICKERS;
 		
 		// throw an exception if the original file is missing
 		if (originalFile == null) throw new IllegalArgumentException("original file must not be null");
@@ -215,7 +223,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	}
 	
 	private void initialiseMessageTextView() {
-		// attach view tree observer so we can keep track of the bounds an ensure a square background
+		// attach view tree observer so we can keep track of the bounds and ensure a square background
 		mMessageTextViewLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
 			@Override public void onGlobalLayout() { onMessageTextViewLayout(); } };
 		mMessageTextView.getViewTreeObserver().addOnGlobalLayoutListener(mMessageTextViewLayoutListener);
@@ -250,6 +258,9 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			mMessageTextView.getViewTreeObserver().removeGlobalOnLayoutListener(mMessageTextViewLayoutListener);
 			mMessageTextViewLayoutListener = null;
 		}
+		
+		// remove any pending runnables
+		cancelHideStickerLockMessageRunnable(false);
 	}
 	
 	
@@ -422,8 +433,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mButtonDivider.setVisibility(hasFilters == hasStickers ? View.VISIBLE : View.GONE);
 		
 		// update the locked message
-		if (mAppliedFilter != null && isFilterLocked) mMessageTextView.setText(mAppliedFilter.getSettings().getUnlockMessage());
-		if (mLastAppliedSticker != null && isStickerLocked) mMessageTextView.setText(mLastAppliedSticker.getSettings().getUnlockMessage());
+		if (mAppliedFilter != null && isFilterLocked) setFilterLockMessage(mAppliedFilter.getSettings().getUnlockMessage());
+		if (mLastAppliedSticker != null && isStickerLocked) setStickerLockMessage(mLastAppliedSticker.getSettings().getUnlockMessage());
 		mMessageTextView.setVisibility(isFilterLocked || isStickerLocked ? View.VISIBLE : View.INVISIBLE);
 		
 		// update the next button
@@ -481,6 +492,102 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 
 	}
 	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	 * update lock messages
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	private void setFilterLockMessage(String message) {
+		mMessageTextView.setText(message);
+	}
+	
+	private void setStickerLockMessage(String message) {
+		mMessageTextView.setText(message);
+		if (mHideStickerLockMessageRunnable != null) mUiThreadHandler.removeCallbacks(mHideStickerLockMessageRunnable);
+		mUiThreadHandler.postDelayed(buildHideStickerLockMessageRunnable(), HIDE_LOCK_MESSAGE_DELAY_MS);
+	}
+	
+	private boolean isShowingLockMessage() {
+		boolean showingFilterLockMessage = mAppliedFilter != null && mAppliedFilter.getSettings().isLocked();
+		boolean showingStickerLockMessage = mLastAppliedSticker != null && mLastAppliedSticker.getSettings().isLocked() && mHideStickerLockMessageRunnable != null;
+		return showingFilterLockMessage || showingStickerLockMessage;
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	 * lock messages runnables / animation
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	private void hideFilterLockMessage(final boolean changeEffect) {
+		Animation fadeOutAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_out);
+		fadeOutAnim.setAnimationListener(new Animation.AnimationListener() {
+			@Override public void onAnimationStart(Animation animation) { }
+			@Override public void onAnimationRepeat(Animation animation) { }
+			@Override public void onAnimationEnd(Animation animation) {
+				// reset applied filter to first / default and update view to reflect the change
+				if (changeEffect) onEffectChange(mFilters.get(0));
+				updateView();
+			}
+		});
+		mMessageTextView.startAnimation(fadeOutAnim);
+	}
+	
+	private Runnable buildHideStickerLockMessageRunnable() {
+		mHideStickerLockMessageRunnable = new Runnable() {
+			@Override public void run() {
+				Animation fadeOutAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_out);
+				fadeOutAnim.setAnimationListener(new Animation.AnimationListener() {
+					@Override public void onAnimationStart(Animation animation) { }
+					@Override public void onAnimationRepeat(Animation animation) { }
+					@Override public void onAnimationEnd(Animation animation) {
+						mHideStickerLockMessageRunnable = null;
+						// reset last applied sticker and update view to reflect the change
+						mLastAppliedSticker = null;
+						updateView();
+					}
+				});
+				mMessageTextView.startAnimation(fadeOutAnim);
+			}
+		};
+		return mHideStickerLockMessageRunnable;
+	}
+	
+	private void cancelHideStickerLockMessageRunnable(boolean runImmediate) {
+		if (mHideStickerLockMessageRunnable == null) return;
+		mUiThreadHandler.removeCallbacks(mHideStickerLockMessageRunnable);
+		if (runImmediate) mHideStickerLockMessageRunnable.run();
+		else mHideStickerLockMessageRunnable = null;
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * on filter button click
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	private void onFilterButtonClick() {
+		// cancel any pending runnables and run them right away
+		if (isShowingLockMessage()) cancelHideStickerLockMessageRunnable(true);
+		mInteractionState = InteractionState.SHOWING_FILTERS;
+		mTabletop.setInteractionEnabled(false);
+		mTabletop.pinAllGraphics();
+		updateViewEditedImageView();
+		updateViewProgress();
+		updateView();
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * on sticker button click
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	private void onStickerButtonClick() {
+		// if a lock message is showing, are currently selected filter is not available
+		// since we're switching to the stickers here, make sure we reset the active filter to the 'default'
+		if (isShowingLockMessage()) hideFilterLockMessage(true);
+		
+		mInteractionState = InteractionState.SHOWING_STICKERS;
+		mTabletop.setInteractionEnabled(true);
+		updateViewEditedImageView();
+		updateViewProgress();
+		updateView();
+	}
+	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * on next button click
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -489,6 +596,9 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		boolean isShowingFilters = mInteractionState.equals(InteractionState.SHOWING_FILTERS);
 		boolean hasStickers = mStickers.size() != 0;
 		boolean hasFilters = mFilters.size() != 0;
+		
+		// hide filter lock message and change back to default filter 
+		if (isShowingFilters && isShowingLockMessage()) hideFilterLockMessage(true);
 		
 		if (hasStickers && hasFilters && isShowingFilters) mInteractionState = InteractionState.SHOWING_STICKERS; // show the filters
 		else new SaveEditedBitmapToFileAsyncTask().execute(); // save bitmap and change file		
@@ -503,6 +613,13 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 
 	private void onEffectClick(View v) {
 		Filter filter = (Filter) v.getTag();
+		boolean filterChanged = !filter.equals(mAppliedFilter);
+		// we're about to change filters already, so just get rid of the current lock message
+		if (isShowingLockMessage() && filterChanged) hideFilterLockMessage(false);
+		onEffectChange(filter);
+	}
+	
+	private void onEffectChange(Filter filter) {
 		if (filter.equals(mAppliedFilter)) return;
 		mAppliedFilter = filter;
 		composeBitmap(true);
@@ -528,6 +645,10 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 
 		// don't add stickers if the currently selected filter is locked
 		if (mAppliedFilter != null && mAppliedFilter.getSettings().isLocked()) return;
+		
+		// if the sticker changed and the new sticker isn't locked, run fade out animation immediately
+		boolean stickerChanged = !JSAObjectUtil.equals(mLastAppliedSticker, sticker);
+		if (stickerChanged && !sticker.getSettings().isLocked()) cancelHideStickerLockMessageRunnable(true);
 		
 		// keep track of last selected sticker for unlock message
 		mLastAppliedSticker = sticker;
@@ -751,7 +872,14 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 
 			new LoadStickerFilterImagesAsyncTask(getActivity()).execute();
 			
-			mInteractionState = filterPack != null ? InteractionState.SHOWING_FILTERS : InteractionState.SHOWING_STICKERS;
+			/*
+			 * Don't touch interaction state here, because the desired state gets supplied as extra by the parent app. It is up
+			 * to the parent app to ensure that the selected mode makes sense. In other words: if SHOWING_STICKERS is supplied,
+			 * then it's the parent app's responsibility to make sure that stickers are available.
+			 * 
+			 * mInteractionState = filterPack != null ? InteractionState.SHOWING_FILTERS : InteractionState.SHOWING_STICKERS;
+			 */
+			
 			updateViewEditedImageView();
 			updateView();
 		}
