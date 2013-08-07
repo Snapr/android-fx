@@ -46,7 +46,8 @@ public abstract class SnaprStickerUtil {
 			
 			StickerPack pack = new StickerPack();
 			pack.mName = json.getString("name");
-			pack.mDescription = json.getString("description");
+			// description appears to be optional? only attempt to parse if it's available
+			pack.mDescription = json.has("description") ? json.getString("description") : null;
 			pack.mThumbnail = loadImages ? JsonUtil.loadScaledAssetBitmap(context, folder, "thumb@2x.png", false) : null;
 			pack.mStickers = new ArrayList<SnaprStickerUtil.Sticker>();
 			
