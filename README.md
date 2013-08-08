@@ -129,7 +129,7 @@ This concept extends to any resource type in the library project. For example, b
 
 	<dimen name="button_divider_width">10dp</dimen>
 
-However, depending on the application's style, this gap may be undesired, as the image resources used for the buttons are required to be positioned right next to each other. In this scenario, it's simply a matter of override the dimension outlined above:
+However, depending on the application's style, this gap may be undesired, as the image resources used for the buttons are required to be positioned right next to each other. In this scenario, it's simply a matter of overriding the dimension outlined above:
 
 	<dimen name="button_divider_width">0dp</dimen>
 
