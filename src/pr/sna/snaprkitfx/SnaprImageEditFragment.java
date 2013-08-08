@@ -103,11 +103,14 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 
 	private static final boolean DEBUG = false;
 	
+	// default sticker & filter paths
 	private static final String FILTER_PACK_PATH_DEFAULT = "filter_packs/defaults";
 	private static final String STICKER_PACK_PATH_DEFAULT = "sticker_packs/defaults";
 	
-	private static final float MAX_NEW_GRAPHIC_FACTOR = 0.65f; // no newly added graphic will have a width or height greater than image factor
+	// the canvas size stickers have been created for (and will be scaled for)
+	private static final float TARGET_CANVAS_SIZE_PX = 800;
 
+	// the time a sticker lock message will display (after which a short fade out animation occurs)
 	private static final long HIDE_LOCK_MESSAGE_DELAY_MS = 4000;
 	
 	private static enum InteractionState {
@@ -661,12 +664,10 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		// don't add sticker if it's locked
 		if (sticker.getSettings().isLocked()) return;
 		
-		// scale the bitmap such that neither width nor height exceed a given ratio of the image
+		// stickers are made for a 800x800px canvas - scale the sticker based on the actual size our canvas 
 		int minImageLength = Math.min(mEditedImageView.getWidth(), mEditedImageView.getHeight());
-		int maxBitmapLength = Math.max(sticker.getImage().getWidth(), sticker.getImage().getHeight()); 
-		float bitmapFactor = maxBitmapLength / (float) minImageLength;
-		float bitmapScale = Math.min(MAX_NEW_GRAPHIC_FACTOR / bitmapFactor, 1);
-		mTabletop.addGraphic(sticker, (int) (sticker.getImage().getWidth() * bitmapScale));
+		float minImageScale = minImageLength / (float) TARGET_CANVAS_SIZE_PX;
+		mTabletop.addGraphic(sticker, (int) (sticker.getImage().getWidth() * minImageScale));
 		
 		// track event
 		mFragmentListener.onAddAnalytic(SnaprImageEditFragmentActivity.ANALYTIC_STICKER_ADDED_EVENT, sticker.getSlug());
