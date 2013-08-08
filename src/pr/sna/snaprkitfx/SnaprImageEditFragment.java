@@ -425,12 +425,12 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mStickerContainerRoot.setVisibility(hasStickers && !isShowingFilters ? View.VISIBLE : View.GONE);
 
 		// update the filter and sticker buttons
-		mFilterButton.setVisibility(hasFilters ? View.VISIBLE : View.GONE);
+		mFilterButton.setVisibility(hasFilters && hasStickers ? View.VISIBLE : View.GONE);
 		mFilterButton.setSelected(isShowingFilters);
-		mStickerButton.setVisibility(hasStickers ? View.VISIBLE : View.GONE);
+		mStickerButton.setVisibility(hasStickers && hasFilters? View.VISIBLE : View.GONE);
 		mStickerButton.setSelected(!isShowingFilters);
 		// hide the divider if only one of two buttons is shown
-		mButtonDivider.setVisibility(hasFilters == hasStickers ? View.VISIBLE : View.GONE);
+		mButtonDivider.setVisibility(hasFilters && hasStickers ? View.VISIBLE : View.GONE);
 		
 		// update the locked message
 		if (mAppliedFilter != null && isFilterLocked) setFilterLockMessage(mAppliedFilter.getSettings().getUnlockMessage());
@@ -601,7 +601,12 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		if (isShowingFilters && isShowingLockMessage()) hideFilterLockMessage(true);
 		
 		if (hasStickers && hasFilters && isShowingFilters) mInteractionState = InteractionState.SHOWING_STICKERS; // show the filters
-		else new SaveEditedBitmapToFileAsyncTask().execute(); // save bitmap and change file		
+		else {
+			// save bitmap and change file
+			new SaveEditedBitmapToFileAsyncTask().execute(); 
+			// track event: graphics pinned
+			mFragmentListener.onAddAnalytic(SnaprImageEditFragmentActivity.ANALYTIC_STICKERS_PINNED_EVENT);
+		}
 		updateViewEditedImageView();
 		updateViewProgress();
 		updateView();
@@ -662,6 +667,9 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		float bitmapFactor = maxBitmapLength / (float) minImageLength;
 		float bitmapScale = Math.min(MAX_NEW_GRAPHIC_FACTOR / bitmapFactor, 1);
 		mTabletop.addGraphic(sticker, (int) (sticker.getImage().getWidth() * bitmapScale));
+		
+		// track event
+		mFragmentListener.onAddAnalytic(SnaprImageEditFragmentActivity.ANALYTIC_STICKER_ADDED_EVENT, sticker.getSlug());
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -700,6 +708,14 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		composeBitmap(false);
 		updateViewProgress();
 		updateLastAppliedSticker();
+		
+		// track event: graphics pinned
+		mFragmentListener.onAddAnalytic(SnaprImageEditFragmentActivity.ANALYTIC_STICKERS_PINNED_EVENT);
+	}
+	
+	@Override public void onGraphicRemoved() {
+		// track event: graphic removed
+		mFragmentListener.onAddAnalytic(SnaprImageEditFragmentActivity.ANALYTIC_STICKER_REMOVED_EVENT);
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -751,6 +767,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 				// draw the stickers and apply the effect
 				bitmap = mTabletop.drawOnBitmap(bitmap, true);
 				mComposedBitmapInteractionCount = mTabletop.getInteractionCount();
+				
 				if (isCancelled()) return null;
 				if (mAppliedFilter != null) mAppliedFilter.apply(mContext, bitmap);
 				if (isCancelled()) return null;
@@ -942,6 +959,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	public static interface FragmentListener {
 		void onEditComplete(String filePath);
 		void onAddAnalytic(String value);
+		void onAddAnalytic(String value, Object... formatArgs);
 		void onShowProgressBlocking(String text);
 		void onShowProgressBlocking(String title, String text);
 		void onHideProgressBlocking();

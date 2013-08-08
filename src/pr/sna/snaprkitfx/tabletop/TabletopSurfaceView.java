@@ -399,6 +399,7 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 			if (state.equals(TabletopGraphic.State.DELETED)) {
 				mBackgroundGraphics.remove(mActiveGraphic);
 				mForegroundGraphics.remove(mActiveGraphic);
+				if (mTabletopListener != null) mTabletopListener.onGraphicRemoved();
 			}
 			
 			if (state.equals(TabletopGraphic.State.PINNED) || state.equals(TabletopGraphic.State.DISABLED)) {
@@ -705,6 +706,7 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		void onInteraction(int interactionCount);
 		void onNonInteraction(int interactionCount);
 		void onGraphicPinned();
+		void onGraphicRemoved();
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

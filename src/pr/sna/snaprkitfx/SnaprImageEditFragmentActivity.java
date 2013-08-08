@@ -22,16 +22,21 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.TextView;
 
 public class SnaprImageEditFragmentActivity extends FragmentActivity implements FragmentListener {
-	private ArrayList<String> mAnalytics = new ArrayList<String>();
+	public static final String TAG = "SNA";
+	
+	private final ArrayList<String> mAnalytics = new ArrayList<String>();
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * constants
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+	public static final boolean DEBUG = false;
 	
 	public static final int EDIT_IMAGE = 20;
 	public static final int EDIT_IMAGE_REQUEST_CODE = 20; 
@@ -73,6 +78,10 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 	public static final String ANALYTIC_PAGE_LOADED = "snaprkit-parent://coremetrics/?tag_type=Page View&category_id=ANDROID_VSPINK_APP_PICS_FILTERS_P&page_id=ANDROID_VSPINK_APP_PICS_FILTERS_SELECT_P";
 	public static final String ANALYTIC_CANCEL_EVENT = "snaprkit-parent://coremetrics/?tag_type=Manual Link Click&cm_re=spring2012-_-sub-_-cancel_image_upload& link_name=CANCEL IMAGE UPLOAD&page_id=ANDROID_VSPINK_APP_PICS_FILTERS_SELECT_P"; 
 	public static final String ANALYTIC_SHARE_EVENT = "snaprkit-parent://coremetrics/?tag_type=Conversion Event& link_name=CANCEL IMAGE UPLOAD& category_id=VSPINK_APP_PICS_FILTERS_SELECTED_P&element_id=ANDROID_APP_FILTERS_SELECTED_(FILTER_NAME)&action_type=2";
+	// sticker added
+	public static final String ANALYTIC_STICKER_ADDED_EVENT = "snaprkit-parent://coremetrics/?tag_type=Real Estate&cm_re=130826-_-pinksgotspirit-_-sticker_%s";
+	public static final String ANALYTIC_STICKER_REMOVED_EVENT = "snaprkit-parent://coremetrics/?tag_type=Conversion Event&category_id=ANDROID_APP_PINKS_GOT_SPIRIT_GAMEDAY_P&link_name=ANDROID_APP_CLICKS_X&action_type=2";
+	public static final String ANALYTIC_STICKERS_PINNED_EVENT = "snaprkit-parent://coremetrics/?tag_type=Conversion Event&category_id=ANDROID_APP_PINKS_GOT_SPIRIT_GAMEDAY_P&link_name=ANDROID_APP_CLICKS_CHECK_MARK&action_type=2";
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * on create
@@ -149,7 +158,13 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 	}
 
 	@Override public void onAddAnalytic(String value) {
+		if (DEBUG) Log.i(TAG, "tracking event: " + value);
 		getAnalytics().add(value);
+	}
+	
+	@Override public void onAddAnalytic(String value, Object... formatArgs) {
+		if (DEBUG) Log.i(TAG, "tracking event: " + String.format(value, formatArgs));
+		getAnalytics().add(String.format(value, formatArgs));
 	}
 
 	@Override public void onShowProgressBlocking(String title) {
