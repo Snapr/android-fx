@@ -24,7 +24,7 @@ The library assumes that the first filter in the list is always the 'original' f
 Stickers
 ----------------------
 
-The stickers used within the library are specified in a single 'sticker pack'. The sticker pack is loaded from the application 'assets' folder at runtime. The sticker pack uses a single json file (sticker-pack.json) to define all of its stickers. Stickers are defined by a single image and thumbnail. Each sticker has an id called a slug. Stickers live in the 'assets' folder in the sticker pack. Sticker thumbnails live in the 'assets/thumbs' folder with filename format: slug@2x.png
+The stickers used within the library are specified in a single 'sticker pack'. The sticker pack is loaded from the application 'assets' folder at runtime. The sticker pack uses a single json file (sticker-pack.json) to define all of its stickers. Stickers are defined by a single image and thumbnail. Each sticker has an id called a 'slug'. Stickers live in the 'assets' folder in the sticker pack. Sticker thumbnails live in the 'assets/thumbs' folder with filename format: `slug@2x.png`
 
 
 Defining Filters and Stickers
@@ -32,20 +32,20 @@ Defining Filters and Stickers
 
 By default, the library will look in the following locations for filters and stickers (within the application assets folder):
 
-filter-packs/defaults
-sticker-packs/defaults
+	filter-packs/defaults
+	sticker-packs/defaults
 
 To specify a different location, use the following methods on the SnaprKitFragment:
 
-setFilterPackPath("filter_packs/example");
-setStickerPackPath("sticker_packs/example");
+	setFilterPackPath("filter_packs/example");
+	setStickerPackPath("sticker_packs/example");
 
 Configuring Filters and Stickers
 ----------------------
 
 Filters and stickers can be configured using two different approaches:
 
-1. At build time, by adding a "settings" object to the Json file declaring the filters/stickers.
+1. At build time, by adding a "settings" object to the json file declaring the filters/stickers.
 2. At runtime, by calling one of the static `SnaprImageEditFragmentActivity.startActivity(...)` methods and supplying a `Builder` instance with the desired settings.
 
 Example of a "settings" declaration in `filter-pack.json`:
@@ -63,13 +63,15 @@ Example of a "settings" declaration in `filter-pack.json`:
 	}
 	
 The expected format for `TIMESTAMP` is `2013-03-08 16:42:54 -0800`, which is parsed at startup of the module using the following pattern: `yyyy-MM-dd HH:mm:ss Z`. Failing to comply with this format will break the logic around when a sticker of filter may become available to the user.
+
 Also note that:
 
 - the `hidden` flag will override the `locked` setting. In other words, if a filter or sticker is flagged as both locked and hidden, it will simply not show up to the user.
 - the `locked` flag cannot be set without an appropriate `unlock_message`.
 - dates are optional.
 
-Specifying the settings for a specific filter or sticker at runtime (i.e. if an effect item should be unlocked because the user reached a certain number of points), is done by mapping the `slug` of the item to a `SnaprSetting` instance. The latter is a simple POJO that wraps the various settings that can be made and is also used for static settings declared in Json.
+Specifying the settings for a specific filter or sticker at runtime (i.e. if an effect item should be unlocked because the user reached a certain number of points), is done by mapping the `slug` of the item to a `SnaprSetting` instance. The latter is a simple POJO that wraps around the various settings that can be made and is also used for static settings declared in json.
+
 It's up to the parent app to instantiate a `Map<String, SnarpSetting>` to hold the settings that should be applied at runtime. Generally, we'd recommend to use a `HashMap`, for fast lookups and to allow serialization. Internally, the app will convert other implementations to a `HashMap`, which guarantees that only one setting will ever exist for a specific filter or sticker.
 
 Example for constructing runtime settings for a filter or sticker:
@@ -78,7 +80,7 @@ Example for constructing runtime settings for a filter or sticker:
 	Map<String, SnaprSetting> settings = new HashMap<String, SnaprSetting>();
 	settings.put(bubbleSetting.getSlug(), bubbleSetting);
 
-The formats for the various options are identical to the Json configuration.
+The formats for the various options are identical to the json configuration.
 
 Once the settings have been set up, passing them on is made easy through the static `Builder` class that is required to invoke the `SnaprImageEditFragmentActivity`:
 
@@ -92,16 +94,44 @@ Once the settings have been set up, passing them on is made easy through the sta
 	// or start for result:
 	SnaprImageEditFragmentActivity.startActivityForResult(this, builder);
 
+As a general rule, the `Builder` class provides all the configuration options for the library project, and thus the UI related to applying image effects and adding stickers. In particular, clients will be interested in the following setters:
+
+	// Setter for defining the path to filters that should be loaded into the effects
+	// module. Also see the 'Defining Filters and Stickers' section above.
+	setFilterPackPath(String path)	
+	
+	// Setter for defining the path to stickers that should be loaded into the effects
+	// module. Also see the 'Defining Filters and Stickers' section above.
+	setStickerPackPath(String path)
+	
+	// Setter for defining the aspect ratio of the image loaded into the effects module.
+	setImageAspectRatio(float imageAspectRatio)
+	
+	// Setter for defining the launch mode of the effects module. This will determine what
+	// 'tab' is initially selected: filters or stickers. Defaults to filters.
+	// LaunchMode is a publicly accessible enum; either pass in one of its constants or 
+	// try your luck with the #parse() method.
+	setLaunchMode(LaunchMode mode)
+
+Note that the latter does not check whether the launch mode is actually available at runtime. That is, if the 'sticker' mode is set, but there are not any sticker assets available, the effects module ends up in an undetermined state. In other words: it is up to the caller to ensure that there are assets available for the mode that is set.
+	
 Library assets
 ----------------------
 
-Some assets used within the library are not loaded from assets at runtime. These assets are predefined within the application and loaded from resources. One such example is the delete button displayed when a sticker is being manipulated. The assets used to display this button are:
+Some assets used within the library are not loaded from the assets folder at runtime. These assets are predefined within the application and loaded from resources. One such example is the delete button displayed when a sticker is being manipulated. The assets used to display this button are:
 
-res/drawable-hdpi/snaprkit_btn_sticker_delete_normal.png
-res/drawable-hdpi/snaprkit_btn_sticker_delete_down.png
+	res/drawable-hdpi/snaprkit_btn_sticker_delete_normal.png
+	res/drawable-hdpi/snaprkit_btn_sticker_delete_down.png
 
-To use application-specific assets, include an image resource with the same name in the application project.
+To use application-specific assets, include an image resource with the same name in the application project. 
 
+This concept extends to any resource type in the library project. For example, by default a `10dp` spacing exists between the filter and sticker mode buttons, ensuring a small gap, thus a better separation between the two options:
+
+	<dimen name="button_divider_width">10dp</dimen>
+
+However, depending on the application's style, this gap may be undesired, as the image resources used for the buttons are required to be positioned right next to each other. In this scenario, it's simply a matter of override the dimension outlined above:
+
+	<dimen name="button_divider_width">0dp</dimen>
 
 Troubleshooting
 ----------------------
