@@ -632,6 +632,9 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mAppliedFilter = filter;
 		composeBitmap(true);
 		updateViewEffects();
+
+		// track event
+		mFragmentListener.onAddAnalytic(SnaprImageEditFragmentActivity.ANALYTIC_FILTER_ADDED_EVENT, filter.getSlug());
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

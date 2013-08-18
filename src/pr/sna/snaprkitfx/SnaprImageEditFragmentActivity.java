@@ -82,6 +82,8 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 	public static final String ANALYTIC_STICKER_ADDED_EVENT = "snaprkit-parent://coremetrics/?tag_type=Real Estate&cm_re=130826-_-pinksgotspirit-_-sticker_%s";
 	public static final String ANALYTIC_STICKER_REMOVED_EVENT = "snaprkit-parent://coremetrics/?tag_type=Conversion Event&category_id=ANDROID_APP_PINKS_GOT_SPIRIT_GAMEDAY_P&link_name=ANDROID_APP_CLICKS_X&action_type=2";
 	public static final String ANALYTIC_STICKERS_PINNED_EVENT = "snaprkit-parent://coremetrics/?tag_type=Conversion Event&category_id=ANDROID_APP_PINKS_GOT_SPIRIT_GAMEDAY_P&link_name=ANDROID_APP_CLICKS_CHECK_MARK&action_type=2";
+	// filter added
+	public static final String ANALYTIC_FILTER_ADDED_EVENT = "snaprkit-parent://coremetrics/?tag_type=Real Estate&cm_re=130826-_-pinksgotspirit-_-filter_%s";
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * on create
