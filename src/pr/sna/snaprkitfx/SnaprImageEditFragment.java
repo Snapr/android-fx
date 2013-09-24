@@ -43,8 +43,8 @@ import android.widget.Toast;
 public class SnaprImageEditFragment extends Fragment implements TabletopListener {
 	private FragmentListener mFragmentListener;
 
-	private final List<Filter> mFilters = new ArrayList<Filter>();
-	private final List<Sticker> mStickers = new ArrayList<Sticker>();
+	private FilterPack mFilterPack;
+	private List<StickerPack> mStickerPacks;
 	
 	private File mOriginalFile;					// the location of the original, unscaled image
 	private File mSaveFile;						// the location to save the modified image to
@@ -61,7 +61,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private InteractionState mInteractionState = InteractionState.SHOWING_FILTERS;	// the current state of the fragment interaction
 	
 	private String mFilterPackLocation = FILTER_PACK_PATH_DEFAULT;		// the location (under assets) where the filter packs will be loaded from
-	private String mStickerPackLocation = STICKER_PACK_PATH_DEFAULT;	// the location (under assets) where the sticker packs will be loaded from
+	private List<String> mStickerPackLocations;							// the locations (under assets) where the sticker packs will be loaded from
 	
 	private float mImageAspectRatio = 1.0f;								// The desired image aspect ratio for the image
 	
@@ -133,10 +133,14 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mUiThreadHandler = new Handler();
 		
 		mFilterPackLocation = extras.getString(SnaprImageEditFragmentActivity.EXTRA_FILTER_PACK_PATH);
-		mStickerPackLocation = extras.getString(SnaprImageEditFragmentActivity.EXTRA_STICKER_PACK_PATH);
+		mStickerPackLocations = extras.getStringArrayList(SnaprImageEditFragmentActivity.EXTRA_STICKER_PACK_PATHS);
 		
 		if (mFilterPackLocation == null) mFilterPackLocation = FILTER_PACK_PATH_DEFAULT;
-		if (mStickerPackLocation == null) mStickerPackLocation = STICKER_PACK_PATH_DEFAULT;
+		if (mStickerPackLocations == null)
+		{
+			mStickerPackLocations = new ArrayList<String>();
+			mStickerPackLocations.add(STICKER_PACK_PATH_DEFAULT);
+		}
 		
 		mImageAspectRatio = extras.getFloat(SnaprImageEditFragmentActivity.EXTRA_IMAGE_ASPECT_RATIO);
 		if (mImageAspectRatio == 0) mImageAspectRatio = 1.0f;  
@@ -305,9 +309,9 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	 * initialise effects
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-	private FilterPack inflateEffects() {
+	private FilterPack inflateEffects(String filterPackLocation) {
 		try { // load the filter packs from file
-			return FilterPack.parse(getActivity().getApplicationContext(), mFilterPackLocation, false);
+			return FilterPack.parse(getActivity().getApplicationContext(), filterPackLocation, false);
 		} catch (Exception exception) {
 			Log.e(SnaprImageEditFragment.class.getSimpleName(), "error inflating effects", exception);
 			return null;
@@ -319,7 +323,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 		
 		// create the thumbnail views for each effect
-		for (Filter filter : mFilters) {
+		for (Filter filter : mFilterPack.getFilters()) {
 			View view = inflater.inflate(R.layout.snaprkitfx_effect_item, null);
 			view.setTag(filter);
 			
@@ -353,9 +357,9 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	 * initialise stickers
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-	private StickerPack inflateStickers() {
+	private StickerPack inflateStickers(String stickerPackLocation) {
 		try { // load the sticker packs from file
-			return StickerPack.parse(getActivity().getApplicationContext(), mStickerPackLocation, false);
+			return StickerPack.parse(getActivity().getApplicationContext(), stickerPackLocation, false);
 		} catch (Exception exception) {
 			Log.e(SnaprImageEditFragment.class.getSimpleName(), "error inflating stickers", exception);
 			return null;
@@ -363,10 +367,17 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	}
 	
 	private void initialiseStickerViews() {
+		for (StickerPack stickerPack : mStickerPacks)
+		{
+			initialiseStickerPackViews(stickerPack.getStickers());
+		}
+	}
+	
+	private void initialiseStickerPackViews(List<Sticker> stickers) {
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 
 		// create the thumbnail views for each sticker		
-		for (Sticker sticker : mStickers) {
+		for (Sticker sticker : stickers) {
 			View view = inflater.inflate(R.layout.snaprkitfx_effect_item, null);
 			view.setTag(sticker);
 			
@@ -408,6 +419,23 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		view.findViewById(R.id.locked_overlay_imageview).setVisibility(sticker.getSettings().isLocked() ? View.VISIBLE : View.INVISIBLE);
 	}
 	
+	private boolean hasFilters()
+	{
+		return (mFilterPack!=null &&  mFilterPack.getFilters()!=null && mFilterPack.getFilters().size()!=0);
+	}
+	
+	private boolean hasStickers()
+	{
+		if (mStickerPacks == null) return false;
+		
+		for (StickerPack stickerPack: mStickerPacks)
+		{
+			if (stickerPack != null && stickerPack.getStickers() != null && stickerPack.getStickers().size() > 0) return true;
+		}
+		
+		return false;
+	}
+	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 *  update view
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -417,8 +445,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		boolean isShowingFilters = mInteractionState.equals(InteractionState.SHOWING_FILTERS);
 		boolean isFilterLocked = mAppliedFilter != null ? mAppliedFilter.getSettings().isLocked() : false;
 		boolean isStickerLocked = mLastAppliedSticker != null ? mLastAppliedSticker.getSettings().isLocked() : false;
-		boolean hasStickers = mStickers.size() != 0;
-		boolean hasFilters = mFilters.size() != 0;
+		boolean hasStickers = hasStickers();
+		boolean hasFilters = hasFilters();
 
 		// reset last selected sticker if we're not displaying stickers anymore
 		if (isShowingFilters && mLastAppliedSticker != null) mLastAppliedSticker = null;
@@ -456,7 +484,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
 	private void updateViewEffects() {
-		for (Filter filter : mFilters) {
+		if (mFilterPack == null || mFilterPack.getFilters() == null) return;
+		for (Filter filter : mFilterPack.getFilters()) {
 			View view = mFilterContainer.findViewWithTag(filter);
 			if (view == null) return;
 			view.setVisibility(filter.getSettings().isVisible() ? View.VISIBLE : View.GONE);
@@ -525,8 +554,9 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			@Override public void onAnimationStart(Animation animation) { }
 			@Override public void onAnimationRepeat(Animation animation) { }
 			@Override public void onAnimationEnd(Animation animation) {
+				// TODO: Revisit default
 				// reset applied filter to first / default and update view to reflect the change
-				if (changeEffect) onEffectChange(mFilters.get(0));
+				if (changeEffect) onEffectChange(mFilterPack.getFilters().get(0));
 				updateView();
 			}
 		});
@@ -597,8 +627,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 
 	private void onNextButtonClick() {
 		boolean isShowingFilters = mInteractionState.equals(InteractionState.SHOWING_FILTERS);
-		boolean hasStickers = mStickers.size() != 0;
-		boolean hasFilters = mFilters.size() != 0;
+		boolean hasStickers = hasStickers();
+		boolean hasFilters = hasFilters();
 		
 		// hide filter lock message and change back to default filter 
 		if (isShowingFilters && isShowingLockMessage()) hideFilterLockMessage(true);
@@ -813,8 +843,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			mComposedBitmap = null;
 			mBaseBitmapFilter = null; // null effects to release unused memory
 			mAppliedFilter = null;
-			mFilters.clear(); // remove all references to effects and stickers
-			mStickers.clear();
+			mFilterPack = null; // remove all references to effects and stickers
+			mStickerPacks = null;
 			updateViewEditedImageView();
 			mEditedImageView.setVisibility(View.GONE);
 			mTabletop.setVisibility(View.GONE);
@@ -833,28 +863,37 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	 * load stickers filters async task
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
-	private class LoadStickersFiltersAsyncTask extends AsyncTask<Void, Void, JSATuple<FilterPack, StickerPack>> {
+	private class LoadStickersFiltersAsyncTask extends AsyncTask<Void, Void, SnaprAssets> {
 		
 		@Override protected void onPreExecute() {
 			super.onPreExecute();
 			mFragmentListener.onShowProgressBlocking(getString(R.string.snaprkitfx_loading));
 		}
 
-		@Override protected JSATuple<FilterPack, StickerPack> doInBackground(Void... params) {
+		@Override protected SnaprAssets doInBackground(Void... params) {
 			Thread.currentThread().setName(Thread.currentThread().getName() + " [" + getClass().getSimpleName() + "]");
+			
 			if (DEBUG) JSATimeUtil.logTime();
-			FilterPack filterPack = inflateEffects();
+			
+			FilterPack filterPack = inflateEffects(mFilterPackLocation);
 			if (DEBUG) JSATimeUtil.logTime("filter packs inflated");
-			StickerPack stickerPack = inflateStickers();
+			
+			ArrayList<StickerPack> stickerPacks = new ArrayList<StickerPack>();
+			for (String stickerPackLocation:mStickerPackLocations)
+			{
+				StickerPack stickerPack = inflateStickers(stickerPackLocation);
+				stickerPacks.add(stickerPack);
+			}
 			if (DEBUG) JSATimeUtil.logTime("sticker packs inflated");
-			return new JSATuple<FilterPack, StickerPack>(filterPack, stickerPack);
+			
+			return new SnaprAssets(filterPack, stickerPacks);
 		}
 		
-		@Override protected void onPostExecute(JSATuple<FilterPack, StickerPack> result) {
+		@Override protected void onPostExecute(SnaprAssets result) {
 			super.onPostExecute(result);
 			mFragmentListener.onHideProgressBlocking();
-			FilterPack filterPack = result.getA();
-			StickerPack stickerPack = result.getB();
+			FilterPack filterPack = result.getFilterPack();
+			ArrayList<StickerPack> stickerPacks = (ArrayList<StickerPack>) result.getStickerPacks();
 			if (!isAdded()) return;
 
 			// settings extra
@@ -871,23 +910,26 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 					}
 				}
 				
-				mFilters.addAll(filterPack.getFilters());
-				if (mFilters.size() != 0) mAppliedFilter = mFilters.get(0);
+				mFilterPack = filterPack;
+				if (mFilterPack.getFilters().size() != 0) mAppliedFilter = mFilterPack.getFilters().get(0);
 				initialiseEffectViews();
 				updateViewEffects();
 			}
 			
-			if (stickerPack != null) {
+			if (stickerPacks != null) {
 				if (suppliedSettings != null) {
-					// sticker settings
-					for (Sticker sticker : stickerPack.getStickers()) {
-						SnaprSetting settings = suppliedSettings.get(sticker.getSlug());
-						if (settings != null) sticker.setSettings(settings);
+					
+					for (StickerPack stickerPack : stickerPacks)
+					{
+						// sticker settings
+						for (Sticker sticker : stickerPack.getStickers()) {
+							SnaprSetting settings = suppliedSettings.get(sticker.getSlug());
+							if (settings != null) sticker.setSettings(settings);
+						}
 					}
-
 				}
 				
-				mStickers.addAll(stickerPack.getStickers());
+				mStickerPacks = stickerPacks;
 				initialiseStickerViews();
 			}
 
@@ -919,13 +961,20 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		
 		@Override protected Boolean doInBackground(Void... params) {
 			Thread.currentThread().setName(Thread.currentThread().getName() + " [" + getClass().getSimpleName() + "]");
+			
 			if (DEBUG) JSATimeUtil.logTime();
-			for (Filter filter : mFilters)
+			
+			for (Filter filter : mFilterPack.getFilters())
 				filter.loadImagesNoException(mContext, mFilterPackLocation, new SimpleOnImageLoadListener());
 			if (DEBUG) JSATimeUtil.logTime("filter pack images loaded");
-			for (Sticker sticker : mStickers)
-				sticker.loadImagesNoException(mContext, mStickerPackLocation, new SimpleOnImageLoadListener());
+			
+			for (int i=0; i<mStickerPacks.size(); i++)
+			{
+				for (Sticker sticker : mStickerPacks.get(i).getStickers())
+					sticker.loadImagesNoException(mContext, mStickerPackLocations.get(i), new SimpleOnImageLoadListener());
+			}
 			if (DEBUG) JSATimeUtil.logTime("sticker pack images loaded");
+			
 			return true;
 		}
 	}

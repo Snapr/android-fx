@@ -64,7 +64,7 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 	public static final String EXTRA_ANALYTICS = "EXTRA_ANALYTICS";
 	
 	public static final String EXTRA_FILTER_PACK_PATH = "EXTRA_FILTER_PACK_PATH";
-	public static final String EXTRA_STICKER_PACK_PATH = "EXTRA_STICKER_PACK_PATH";
+	public static final String EXTRA_STICKER_PACK_PATHS = "EXTRA_STICKER_PACK_PATH";
 	
 	public static final String EXTRA_LAUNCH_MODE = "EXTRA_LAUNCH_MODE";
 	public static final String EXTRA_EFFECT_SETTINGS = "EXTRA_EFFECT_SETTINGS";
@@ -130,7 +130,7 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		if (builder.mImageAspectRatio != 0f) intent.putExtra(EXTRA_IMAGE_ASPECT_RATIO, builder.mImageAspectRatio);
 		if (builder.mJustTookPhoto) intent.putExtra(EXTRA_TOOK_PHOTO_TIMESTAMP, builder.mJustTookPhotoTimestamp);
 		if (builder.mFilterPackPath != null) intent.putExtra(EXTRA_FILTER_PACK_PATH, builder.mFilterPackPath);
-		if (builder.mStickerPackPath != null) intent.putExtra(EXTRA_STICKER_PACK_PATH, builder.mStickerPackPath);
+		if (builder.mStickerPackPaths != null) intent.putStringArrayListExtra(EXTRA_STICKER_PACK_PATHS, builder.mStickerPackPaths);
 		intent.putExtra(EXTRA_LAUNCH_MODE, builder.mLaunchMode.name());
 		
 		Serializable effectSettings = builder.mSettings == null ? null : 
@@ -250,7 +250,7 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		private final boolean mJustTookPhoto;
 		private final long mJustTookPhotoTimestamp;
 		private String mFilterPackPath;
-		private String mStickerPackPath;
+		private ArrayList<String> mStickerPackPaths;
 		private float mImageAspectRatio;
 		private Map<String, SnaprSetting> mSettings;
 		// default to filters being selected
@@ -272,8 +272,8 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 			return this;
 		}
 		
-		public Builder setStickerPackPath(String path) {
-			mStickerPackPath = path;
+		public Builder setStickerPackPaths(ArrayList<String> paths) {
+			mStickerPackPaths = paths;
 			return this;
 		}
 		
@@ -289,7 +289,7 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		
 		/** 
 		 * Note that this does not check whether the mode is actually available. In other words: it's up to the caller to ensure
-		 * that if {@link LaunchMode#STICKERS} is set, {@link #setStickerPackPath(String)} is also called with a valid value.
+		 * that if {@link LaunchMode#STICKERS} is set, {@link #setStickerPackPaths(String)} is also called with a valid value.
 		 */
 		public Builder setLaunchMode(LaunchMode mode) {
 			if (mode == null) throw new IllegalArgumentException("mode cannot be null; use either LaunchMode.FILTERS or LaunchMode.STICKERS");

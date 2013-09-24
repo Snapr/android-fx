@@ -31,9 +31,11 @@ public abstract class SnaprStickerUtil {
 	
 	public static final class StickerPack {
 		private String mName;
+		private String mSlug;
 		private String mDescription;
 		private List<Sticker> mStickers;
 		private Bitmap mThumbnail;
+		private SnaprSetting mSettings;
 		
 		public static StickerPack parse(Context context, String folder) throws IOException, JSONException, ParseException {
 			return parse(context, folder, false);
@@ -46,10 +48,14 @@ public abstract class SnaprStickerUtil {
 			
 			StickerPack pack = new StickerPack();
 			pack.mName = json.getString("name");
+			pack.mSlug = json.getString("slug");
 			// description appears to be optional? only attempt to parse if it's available
 			pack.mDescription = json.has("description") ? json.getString("description") : null;
 			pack.mThumbnail = loadImages ? JsonUtil.loadScaledAssetBitmap(context, folder, "thumb@2x.png", false) : null;
 			pack.mStickers = new ArrayList<SnaprStickerUtil.Sticker>();
+			
+			// parse settings, or construct default (everything initialised to 'false' and 'null')
+			pack.mSettings = json.isNull("settings") ? SnaprSetting.getDefaultSettings(pack.mSlug) : SnaprSetting.parse(context, json.getJSONObject("settings"), pack.mSlug);
 			
 			ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
 			long deviceMemoryBytes = am.getMemoryClass() * JSAFileUtil.BYTES_PER_MB;
@@ -64,6 +70,10 @@ public abstract class SnaprStickerUtil {
 			return mName;
 		}
 		
+		public String getSlug() {
+			return mSlug;
+		}
+		
 		public String getDescription() {
 			return mDescription;
 		}
@@ -74,6 +84,14 @@ public abstract class SnaprStickerUtil {
 		
 		public Bitmap getThumbnail() {
 			return mThumbnail;
+		}
+		
+		public SnaprSetting getSettings() {
+			return mSettings;
+		}
+		
+		public void setSettings(SnaprSetting settings) {
+			mSettings = settings;
 		}
 		
 		public void loadImagesNoException(Context context, String folder, OnImageLoadListener listener) {
