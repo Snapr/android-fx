@@ -629,7 +629,6 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			@Override public void onAnimationStart(Animation animation) { }
 			@Override public void onAnimationRepeat(Animation animation) { }
 			@Override public void onAnimationEnd(Animation animation) {
-				// TODO: Revisit default
 				// reset applied filter to first / default and update view to reflect the change
 				if (changeEffect) onEffectChange(mFilterPack.getFilters().get(0));
 				updateView();
