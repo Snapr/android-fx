@@ -1000,6 +1000,16 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 						SnaprSetting settings = suppliedSettings.get(stickerPack.getSlug());
 						if (settings != null) stickerPack.setSettings(settings);
 						
+						// if this is the launch sticker pack, and it's not visible because of settings, reset settings
+						if (mLaunchStickerPackSlug != null && mLaunchStickerPackSlug.length() > 0 && mLaunchStickerPackSlug.equals(stickerPack.getSlug()))
+						{
+							if (stickerPack.getSettings().isVisible() == false)
+							{
+								SnaprSetting defaultSetting = SnaprSetting.getDefaultSettings(stickerPack.getSlug());
+								stickerPack.setSettings(defaultSetting);
+							}
+						}
+						
 						// sticker settings
 						for (Sticker sticker : stickerPack.getStickers()) {
 							settings = suppliedSettings.get(sticker.getSlug());
@@ -1010,6 +1020,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 				
 				mStickerPacks = stickerPacks;
 				mCurrentStickerPack = findStickerPackIndexBySlug(mStickerPacks, mLaunchStickerPackSlug, 0);
+				
 				initialiseStickerPackViews(STICKER_PACK_1, mStickerPacks.get(STICKER_PACK_1));
 				initialiseStickerPackViews(STICKER_PACK_2, mStickerPacks.get(STICKER_PACK_2));
 			}
