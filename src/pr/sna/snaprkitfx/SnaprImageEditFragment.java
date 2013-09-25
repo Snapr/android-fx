@@ -41,6 +41,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class SnaprImageEditFragment extends Fragment implements TabletopListener {
+	private static int STICKER_PACK_1 = 0;
+	private static int STICKER_PACK_2 = 1;
+	
 	private FragmentListener mFragmentListener;
 
 	private FilterPack mFilterPack;
@@ -59,6 +62,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private Filter mAppliedFilter;
 	private Sticker mLastAppliedSticker;
 	private InteractionState mInteractionState = InteractionState.SHOWING_FILTERS;	// the current state of the fragment interaction
+	private String mLaunchStickerPackSlug;
+	private int mCurrentStickerPack;
 	
 	private String mFilterPackLocation = FILTER_PACK_PATH_DEFAULT;		// the location (under assets) where the filter packs will be loaded from
 	private List<String> mStickerPackLocations;							// the locations (under assets) where the sticker packs will be loaded from
@@ -89,8 +94,11 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private View mButtonDivider;
 	
 	private ViewGroup mStickerContainer;
+	private ViewGroup mSticker2Container;
 	private View mStickerContainerRoot;
+	private View mSticker2ContainerRoot;
 	private View mStickerButton;
+	private View mSticker2Button;
 	
 	private View mCancelButton;
 	private View mNextButton;
@@ -153,6 +161,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		
 		mFilterContainer = (ViewGroup) getView().findViewById(R.id.filter_container);
 		mStickerContainer = (ViewGroup) getView().findViewById(R.id.sticker_container);
+		mSticker2Container = (ViewGroup) getView().findViewById(R.id.sticker2_container);
 		
 		mCancelButton = getView().findViewById(R.id.cancel_button);
 		mCancelButton.setOnClickListener(new View.OnClickListener() {
@@ -171,6 +180,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		// cache the filter and sticker container root views
 		mFilterContainerRoot = getView().findViewById(R.id.filter_container_root);
 		mStickerContainerRoot = getView().findViewById(R.id.sticker_container_root);
+		mSticker2ContainerRoot = getView().findViewById(R.id.sticker2_container_root);
 		
 		// handle filter button clicks by showing the filters
 		mFilterButton = getView().findViewById(R.id.filter_button);
@@ -184,7 +194,15 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mStickerButton = getView().findViewById(R.id.sticker_button);
 		mStickerButton.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View v) {
-				onStickerButtonClick();
+				onStickerButtonClick(STICKER_PACK_1);
+			}
+		});
+		
+		// handle sticker button clicks by showing the stickers
+		mSticker2Button = getView().findViewById(R.id.sticker2_button);
+		mSticker2Button.setOnClickListener(new View.OnClickListener() {
+			@Override public void onClick(View v) {
+				onStickerButtonClick(STICKER_PACK_2);
 			}
 		});
 		
@@ -200,8 +218,13 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		// determine launch mode (as exposed to the parent app); internally known as interaction state
 		String launchModeString = getActivity().getIntent().getStringExtra(SnaprImageEditFragmentActivity.EXTRA_LAUNCH_MODE);
 		LaunchMode launchMode = launchModeString != null ? LaunchMode.valueOf(launchModeString) : LaunchMode.FILTERS;
-		if (launchMode == LaunchMode.FILTERS) mInteractionState = InteractionState.SHOWING_FILTERS;
-		else /* launchMode == LaunchMode.STICKERS */ mInteractionState = InteractionState.SHOWING_STICKERS;
+		if (launchMode == LaunchMode.FILTERS)
+			mInteractionState = InteractionState.SHOWING_FILTERS;
+		else
+		{
+			mInteractionState = InteractionState.SHOWING_STICKERS;
+			mLaunchStickerPackSlug = getActivity().getIntent().getStringExtra(SnaprImageEditFragmentActivity.EXTRA_LAUNCH_STICKER_PACK);
+		}
 		
 		// throw an exception if the original file is missing
 		if (originalFile == null) throw new IllegalArgumentException("original file must not be null");
@@ -227,6 +250,20 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		
 		mViewsInitialised = true;
 		updateView();
+	}
+	
+	private int findStickerPackIndexBySlug(List<StickerPack> stickerPacks, String slug, int defaultIndex)
+	{
+		if (stickerPacks == null) return defaultIndex;
+		for (int i =0; i< stickerPacks.size(); i++)
+		{
+			if (stickerPacks.get(i).getSlug() != null && stickerPacks.get(i).getSlug().equals(slug))
+			{
+				return i;
+			}
+		}
+		
+		return defaultIndex;
 	}
 	
 	private void initialiseMessageTextView() {
@@ -366,18 +403,23 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		}
 	}
 	
-	private void initialiseStickerViews() {
-		for (StickerPack stickerPack : mStickerPacks)
+	private int getNumVisibleStickerPacks(List<StickerPack> stickerPacks)
+	{
+		int numVisible = 0;
+		
+		for (StickerPack stickerPack : stickerPacks)
 		{
-			initialiseStickerPackViews(stickerPack.getStickers());
+			if (stickerPack.getSettings().isVisible()) numVisible++;
 		}
+		
+		return numVisible;
 	}
 	
-	private void initialiseStickerPackViews(List<Sticker> stickers) {
+	private void initialiseStickerPackViews(int stickerPackIndex, StickerPack stickerPack) {
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 
 		// create the thumbnail views for each sticker		
-		for (Sticker sticker : stickers) {
+		for (Sticker sticker : stickerPack.getStickers()) {
 			View view = inflater.inflate(R.layout.snaprkitfx_effect_item, null);
 			view.setTag(sticker);
 			
@@ -395,7 +437,10 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 				}
 			});
 			
-			mStickerContainer.addView(view);
+			if (stickerPackIndex == 0)
+				mStickerContainer.addView(view);
+			else
+				mSticker2Container.addView(view);
 		}
 	}
 
@@ -409,8 +454,16 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		if (updateView) updateView();
 	}
 	
-	private void updateStickerView(Sticker sticker) {
-		View view = mStickerContainer.findViewWithTag(sticker);
+	private void updateStickerView(int stickerPack, Sticker sticker) {
+		View view = null;
+		if (stickerPack == 0)
+		{
+			view = mStickerContainer.findViewWithTag(sticker);
+		}
+		else
+		{
+			view = mSticker2Container.findViewWithTag(sticker);
+		}
 		if (view == null) return;
 		ImageView image = (ImageView) view.findViewById(R.id.effect_imageview);
 		view.setVisibility(sticker.getSettings().isVisible() ? View.VISIBLE : View.GONE);
@@ -443,23 +496,45 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private void updateView() {
 		if (!isAdded() || !mViewsInitialised) return;
 		boolean isShowingFilters = mInteractionState.equals(InteractionState.SHOWING_FILTERS);
+		boolean isShowingStickers1 = !isShowingFilters && (mCurrentStickerPack == 0);
+		boolean isShowingStickers2 = !isShowingFilters && (mCurrentStickerPack == 1);
 		boolean isFilterLocked = mAppliedFilter != null ? mAppliedFilter.getSettings().isLocked() : false;
 		boolean isStickerLocked = mLastAppliedSticker != null ? mLastAppliedSticker.getSettings().isLocked() : false;
 		boolean hasStickers = hasStickers();
 		boolean hasFilters = hasFilters();
+		int numVisibleStickerPacks = hasStickers?getNumVisibleStickerPacks(mStickerPacks):0;
+		boolean hasStickers1 = (numVisibleStickerPacks > 0);
+		boolean hasStickers2 = (numVisibleStickerPacks > 1);
 
 		// reset last selected sticker if we're not displaying stickers anymore
 		if (isShowingFilters && mLastAppliedSticker != null) mLastAppliedSticker = null;
 		
 		// update the filter or sticker containers
 		mFilterContainerRoot.setVisibility(hasFilters && isShowingFilters ? View.VISIBLE : View.GONE);
-		mStickerContainerRoot.setVisibility(hasStickers && !isShowingFilters ? View.VISIBLE : View.GONE);
-
-		// update the filter and sticker buttons
+		mStickerContainerRoot.setVisibility(hasStickers1 && isShowingStickers1 ? View.VISIBLE : View.GONE);
+		mSticker2ContainerRoot.setVisibility(hasStickers2 && isShowingStickers2 ? View.VISIBLE : View.GONE);
+		
+		// update the filter and sticker buttons visibility and section
 		mFilterButton.setVisibility(hasFilters && hasStickers ? View.VISIBLE : View.GONE);
 		mFilterButton.setSelected(isShowingFilters);
 		mStickerButton.setVisibility(hasStickers && hasFilters? View.VISIBLE : View.GONE);
-		mStickerButton.setSelected(!isShowingFilters);
+		mStickerButton.setSelected(isShowingStickers1);
+		mSticker2Button.setVisibility(hasStickers2 && hasFilters? View.VISIBLE : View.GONE);
+		mSticker2Button.setSelected(isShowingStickers2);
+		
+		// update the filter and sticker buttons backgrounds
+		if (numVisibleStickerPacks == 2)
+		{
+			mFilterButton.setBackgroundResource(R.drawable.snaprkitfx_btn_3btn_filter);
+			mStickerButton.setBackgroundResource(R.drawable.snaprkitfx_btn_3btn_sticker);
+			mSticker2Button.setBackgroundResource(R.drawable.snaprkitfx_btn_3btn_sticker2);
+		}
+		else if (numVisibleStickerPacks == 1)
+		{
+			mFilterButton.setBackgroundResource(R.drawable.snaprkitfx_btn_filter);
+			mStickerButton.setBackgroundResource(R.drawable.snaprkitfx_btn_sticker);
+		}
+		
 		// hide the divider if only one of two buttons is shown
 		mButtonDivider.setVisibility(hasFilters && hasStickers ? View.VISIBLE : View.GONE);
 		
@@ -609,12 +684,13 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	 * on sticker button click
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
-	private void onStickerButtonClick() {
+	private void onStickerButtonClick(int stickerPackIndex) {
 		// if a lock message is showing, are currently selected filter is not available
 		// since we're switching to the stickers here, make sure we reset the active filter to the 'default'
 		if (isShowingLockMessage()) hideFilterLockMessage(true);
 		
 		mInteractionState = InteractionState.SHOWING_STICKERS;
+		mCurrentStickerPack = stickerPackIndex;
 		mTabletop.setInteractionEnabled(true);
 		updateViewEditedImageView();
 		updateViewProgress();
@@ -921,16 +997,22 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 					
 					for (StickerPack stickerPack : stickerPacks)
 					{
+						// sticker pack settings
+						SnaprSetting settings = suppliedSettings.get(stickerPack.getSlug());
+						if (settings != null) stickerPack.setSettings(settings);
+						
 						// sticker settings
 						for (Sticker sticker : stickerPack.getStickers()) {
-							SnaprSetting settings = suppliedSettings.get(sticker.getSlug());
+							settings = suppliedSettings.get(sticker.getSlug());
 							if (settings != null) sticker.setSettings(settings);
 						}
 					}
 				}
 				
 				mStickerPacks = stickerPacks;
-				initialiseStickerViews();
+				mCurrentStickerPack = findStickerPackIndexBySlug(mStickerPacks, mLaunchStickerPackSlug, 0);
+				initialiseStickerPackViews(STICKER_PACK_1, mStickerPacks.get(STICKER_PACK_1));
+				initialiseStickerPackViews(STICKER_PACK_2, mStickerPacks.get(STICKER_PACK_2));
 			}
 
 			new LoadStickerFilterImagesAsyncTask(getActivity()).execute();
@@ -971,7 +1053,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			for (int i=0; i<mStickerPacks.size(); i++)
 			{
 				for (Sticker sticker : mStickerPacks.get(i).getStickers())
-					sticker.loadImagesNoException(mContext, mStickerPackLocations.get(i), new SimpleOnImageLoadListener());
+					sticker.loadImagesNoException(mContext, mStickerPackLocations.get(i), new SimpleOnImageLoadListener(i));
 			}
 			if (DEBUG) JSATimeUtil.logTime("sticker pack images loaded");
 			
@@ -984,11 +1066,23 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
 	private final class SimpleOnImageLoadListener implements OnImageLoadListener {
+		private int mStickerPack;
+		
+		public SimpleOnImageLoadListener()
+		{
+			mStickerPack = 0;
+		}
+		
+		public SimpleOnImageLoadListener(int stickerPack)
+		{
+			mStickerPack = stickerPack;
+		}
+		
 		@Override public void onImageLoad(final Object parent, final Bitmap image) {
 			if (parent instanceof Sticker) {
 				mUiThreadHandler.post(new Runnable() {
 					@Override public void run() {
-						updateStickerView((Sticker) parent);
+						updateStickerView(mStickerPack, (Sticker) parent);
 					}
 				});
 			} else if (parent instanceof Filter) {

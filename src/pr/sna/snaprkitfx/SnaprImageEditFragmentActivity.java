@@ -64,9 +64,10 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 	public static final String EXTRA_ANALYTICS = "EXTRA_ANALYTICS";
 	
 	public static final String EXTRA_FILTER_PACK_PATH = "EXTRA_FILTER_PACK_PATH";
-	public static final String EXTRA_STICKER_PACK_PATHS = "EXTRA_STICKER_PACK_PATH";
+	public static final String EXTRA_STICKER_PACK_PATHS = "EXTRA_STICKER_PACK_PATHS";
 	
 	public static final String EXTRA_LAUNCH_MODE = "EXTRA_LAUNCH_MODE";
+	public static final String EXTRA_LAUNCH_STICKER_PACK = "EXTRA_LAUNCH_STICKER_PACK";
 	public static final String EXTRA_EFFECT_SETTINGS = "EXTRA_EFFECT_SETTINGS";
 	
 	public static final String EXTRA_IMAGE_ASPECT_RATIO = "EXTRA_IMAGE_ASPECT_RATIO";
@@ -132,6 +133,7 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		if (builder.mFilterPackPath != null) intent.putExtra(EXTRA_FILTER_PACK_PATH, builder.mFilterPackPath);
 		if (builder.mStickerPackPaths != null) intent.putStringArrayListExtra(EXTRA_STICKER_PACK_PATHS, builder.mStickerPackPaths);
 		intent.putExtra(EXTRA_LAUNCH_MODE, builder.mLaunchMode.name());
+		intent.putExtra(EXTRA_LAUNCH_STICKER_PACK, builder.mLaunchStickerPack);
 		
 		Serializable effectSettings = builder.mSettings == null ? null : 
 			builder.mSettings instanceof Serializable ? (Serializable) builder.mSettings : 
@@ -255,6 +257,7 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		private Map<String, SnaprSetting> mSettings;
 		// default to filters being selected
 		private LaunchMode mLaunchMode = LaunchMode.FILTERS;
+		private String mLaunchStickerPack = null;
 		
 		public Builder(File file, File outputFile) {
 			this(file, outputFile, false, -1);
@@ -294,6 +297,12 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		public Builder setLaunchMode(LaunchMode mode) {
 			if (mode == null) throw new IllegalArgumentException("mode cannot be null; use either LaunchMode.FILTERS or LaunchMode.STICKERS");
 			mLaunchMode = mode;
+			return this;
+		}
+		
+		public Builder setLaunchStickerPack(String stickerPackSlug)
+		{
+			mLaunchStickerPack = stickerPackSlug;
 			return this;
 		}
 	}

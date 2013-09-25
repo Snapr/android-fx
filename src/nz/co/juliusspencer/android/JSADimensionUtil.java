@@ -23,7 +23,7 @@ public class JSADimensionUtil {
 	}
 	
 	/** Return the width and height of the default display (in a tuple). */
-	@SuppressLint("NewApi") @SuppressWarnings("deprecation") public static JSATuple<Integer, Integer> getDefaultDisplayDimensions(Context context) {
+	@SuppressLint("NewApi") public static JSATuple<Integer, Integer> getDefaultDisplayDimensions(Context context) {
 		WindowManager manager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 		Point dimens = new Point();
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) manager.getDefaultDisplay().getSize(dimens);

@@ -61,7 +61,8 @@
 				android:layout_width="wrap_content"
 				android:layout_height="match_parent"
 				android:paddingBottom="5dip"
-				android:paddingTop="5dip" />
+				android:paddingTop="5dip"
+				android:orientation="horizontal" />
 		</HorizontalScrollView>
 
 		<HorizontalScrollView
@@ -74,7 +75,22 @@
 				android:layout_width="wrap_content"
 				android:layout_height="match_parent"
 				android:paddingBottom="5dip"
-				android:paddingTop="5dip" />
+				android:paddingTop="5dip"
+				android:orientation="horizontal" />
+		</HorizontalScrollView>
+		
+		<HorizontalScrollView
+			android:id="@+id/sticker2_container_root"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content" >
+
+			<LinearLayout
+				android:id="@+id/sticker2_container"
+				android:layout_width="wrap_content"
+				android:layout_height="match_parent"
+				android:paddingBottom="5dip"
+				android:paddingTop="5dip"
+				android:orientation="horizontal" />
 		</HorizontalScrollView>
 	</RelativeLayout>
 
@@ -121,6 +137,14 @@
 			android:background="@drawable/snaprkitfx_btn_sticker"
 			android:contentDescription="@string/snaprkitfx_empty_content_description" />
 
+		<Button
+			android:id="@+id/sticker2_button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:background="@drawable/snaprkitfx_btn_3btn_sticker2"
+			android:visibility="gone"
+			android:contentDescription="@string/snaprkitfx_empty_content_description" />
+		
 		<View
 			android:layout_width="0dp"
 			android:layout_height="0dp"
