@@ -9,6 +9,7 @@ import java.util.List;
 import nz.co.juliusspencer.android.JSAFileUtil;
 import nz.co.juliusspencer.android.JSAMotionEventUtil;
 import pr.sna.snaprkitfx.R;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
@@ -46,6 +47,7 @@ import android.view.SurfaceView;
  * on the surface when the user touches an empty space.
  */
 
+@SuppressLint("WrongCall")
 public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Callback {
 	private static final boolean PRE_HONEYCOMB_DEVICE = Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB;
 	
@@ -184,6 +186,14 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 				if (graphic.isPinned()) count = count + 1;
 			return count;
 		}
+	}
+	
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * pending changes
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	public boolean hasPendingChanges()
+	{
+		return (mForegroundGraphics.size()>0);
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

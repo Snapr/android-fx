@@ -166,7 +166,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mCancelButton = getView().findViewById(R.id.cancel_button);
 		mCancelButton.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View v) {
-				mFragmentListener.onCancel();
+				mFragmentListener.onCancel(mTabletop.hasPendingChanges());
 			}
 		});
 
@@ -316,7 +316,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mBaseBitmap = SnaprImageEditFragmentUtil.saveOriginalTempImage(getActivity(), originalFilepath, mImageAspectRatio, photoTimestamp);
 		if (mBaseBitmap == null) {
 			Toast.makeText(getActivity(), R.string.snaprkitfx_unable_to_load_image_try_another_, Toast.LENGTH_SHORT).show();
-			mFragmentListener.onCancel();		
+			mFragmentListener.onCancel(false);
 		} else {
 			mFragmentListener.onAddAnalytic(SnaprImageEditFragmentActivity.ANALYTIC_PAGE_LOADED);
 			mUiThreadHandler.post(new Runnable() { // run on ui thread to ensure initialisation from media scanner thread is correct 
@@ -1122,7 +1122,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		void onHideProgressBlocking();
 		void onShowProgressUnblocking();
 		void onHideProgressUnblocking();
-		void onCancel();
+		void onCancel(boolean requestConfirmation);
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

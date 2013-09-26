@@ -23,9 +23,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.View;
 import android.view.Window;
-import android.widget.TextView;
 
 public class SnaprImageEditFragmentActivity extends FragmentActivity implements FragmentListener {
 	public static final String TAG = "SNA";
@@ -156,9 +154,15 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		finish();
 	}
 
-	@Override public void onCancel() {
-		onAddAnalytic(SnaprImageEditFragmentActivity.ANALYTIC_PAGE_LOADED);
-		optionallyFinishActivity();
+	@Override public void onCancel(boolean requestConfirmation) {
+		if (requestConfirmation)
+		{
+			showCancelConfirmationDialog();
+		}
+		else
+		{
+			onCancelConfirmed();
+		}
 	}
 
 	@Override public void onAddAnalytic(String value) {
@@ -341,56 +345,59 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 	 * cancel dialog fragment
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
+	public void showCancelConfirmationDialog()
+	{
+		DialogFragment dialog = CancelDialogFragment.newInstance();
+		dialog.show(getSupportFragmentManager(), "dialog");
+	}
+	
+	public void onCancelConfirmed()
+	{
+		onAddAnalytic(SnaprImageEditFragmentActivity.ANALYTIC_PAGE_LOADED);
+		optionallyFinishActivity();
+	}
+	
 	/**
-	 * The {@link CancelDialogFragment} is an extension of {@link DialogFragment} and is used to display to the user a message to optionally
-	 * allow them to specify where to save a photo taken from the camera.
-	 * 
-	 * This feature is currently incomplete and unused (but left include as it may be resurrected).
+	 * The {@link CancelDialogFragment} is an extension of {@link DialogFragment} and is used to display to the user a message to 
+	 * display a warning about unsaved changes.
 	 */
 	
-	public static class CancelDialogFragment extends DialogFragment {
-		
-		public static CancelDialogFragment newInstance() {
-			CancelDialogFragment fragment = new CancelDialogFragment();
+	public static class CancelDialogFragment extends DialogFragment
+	{
+		public static CancelDialogFragment newInstance()
+		{
+			CancelDialogFragment frag = new CancelDialogFragment();
 			Bundle args = new Bundle();
-			fragment.setArguments(args);
-			return fragment;
-		}
-		
-		public CancelDialogFragment() {
-			/* do nothing */
-		}
-		
-		@Override public Dialog onCreateDialog(Bundle savedInstanceState) {
-			
-			View view = getActivity().getLayoutInflater().inflate(R.layout.snaprkitfx_cancel_dialog, null);
-			final TextView text = (TextView) view.findViewById(R.id.textview);
-			text.setText(R.string.snaprkitfx_save_photo_questionmark);
-			
-			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-			builder.setTitle(R.string.snaprkitfx_save_photo_questionmark);
-			builder.setView(view);
-			
-			builder.setNegativeButton(R.string.snaprkitfx_dont_save, new DialogInterface.OnClickListener() {
-				@Override public void onClick(DialogInterface dialog, int which) {
-					SnaprImageEditFragmentActivity activity = (SnaprImageEditFragmentActivity) getActivity();
-					activity.finishActivity();
-					dialog.dismiss();
-				}
-			});
-			builder.setPositiveButton(R.string.snaprkitfx_save, new DialogInterface.OnClickListener() {
-				@Override public void onClick(DialogInterface dialog, int which) {
-					// TODO: show user text field to input file name (saved in gallery folder)
-					SnaprImageEditFragmentActivity activity = (SnaprImageEditFragmentActivity) getActivity();
-					activity.finishActivity();
-					dialog.dismiss();
-				}
-			});
-			
-			final AlertDialog dialog = builder.create();
-			return dialog;
+			frag.setArguments(args);
+			return frag;
 		}
 
+		@Override
+		public Dialog onCreateDialog(Bundle savedInstanceState)
+		{
+			return new AlertDialog.Builder(getActivity())
+				.setTitle(R.string.snaprkitfx_cancel_title)
+				.setMessage(R.string.snaprkitfx_cancel_message)
+				.setPositiveButton(R.string.snaprkitfx_cancel_exit,
+					new DialogInterface.OnClickListener()
+					{
+						public void onClick(DialogInterface dialog, int whichButton)
+						{
+							((SnaprImageEditFragmentActivity)getActivity()).onCancelConfirmed();
+						}
+					}
+				)
+				.setNegativeButton(android.R.string.cancel,
+					new DialogInterface.OnClickListener()
+					{
+						public void onClick(DialogInterface dialog, int whichButton) 
+						{
+							// Do nothing
+						}
+					}
+				)
+				.create();
+		}
 	}
 	
 }
