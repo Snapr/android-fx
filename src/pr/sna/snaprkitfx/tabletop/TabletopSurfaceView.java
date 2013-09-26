@@ -193,7 +193,7 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	public boolean hasPendingChanges()
 	{
-		return (mForegroundGraphics.size()>0);
+		return (getGraphicCount()>0);
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
