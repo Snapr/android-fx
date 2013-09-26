@@ -24,7 +24,7 @@ The library assumes that the first filter in the list is always the 'original' f
 Stickers
 ----------------------
 
-The stickers used within the library are specified in a single 'sticker pack'. The sticker pack is loaded from the application 'assets' folder at runtime. The sticker pack uses a single json file (sticker-pack.json) to define all of its stickers. Stickers are defined by a single image and thumbnail. Each sticker has an id called a 'slug'. Stickers live in the 'assets' folder in the sticker pack. Sticker thumbnails live in the 'assets/thumbs' folder with filename format: `slug@2x.png`
+The stickers used within the library are specified in one more 'sticker packs'. Each sticker pack is loaded from the application 'assets' folder at runtime. Each sticker pack uses a single json file (sticker-pack.json) to define all of its stickers. Stickers are defined by a single image and thumbnail. Each sticker has an id called a 'slug'. Stickers live in the 'assets' folder in the sticker pack. Sticker thumbnails live in the 'assets/thumbs' folder with filename format: `slug@2x.png`
 
 
 Defining Filters and Stickers
@@ -38,7 +38,10 @@ By default, the library will look in the following locations for filters and sti
 To specify a different location, use the following methods on the SnaprKitFragment:
 
 	setFilterPackPath("filter_packs/example");
-	setStickerPackPath("sticker_packs/example");
+    
+	ArrayList<String> paths = new ArrayList<String>();
+	paths.add("sticker_packs/example");
+	setStickerPackPaths(paths);
 
 Configuring Filters and Stickers
 ----------------------
@@ -96,13 +99,13 @@ Once the settings have been set up, passing them on is made easy through the sta
 
 As a general rule, the `Builder` class provides all the configuration options for the library project, and thus the UI related to applying image effects and adding stickers. In particular, clients will be interested in the following setters:
 
-	// Setter for defining the path to filters that should be loaded into the effects
+	// Setter for defining the path to the filter pack that should be loaded into the effects
 	// module. Also see the 'Defining Filters and Stickers' section above.
 	setFilterPackPath(String path)	
 	
-	// Setter for defining the path to stickers that should be loaded into the effects
+	// Setter for defining the path to sticker packs that should be loaded into the effects
 	// module. Also see the 'Defining Filters and Stickers' section above.
-	setStickerPackPath(String path)
+	setStickerPackPaths(ArrayList<String> paths)
 	
 	// Setter for defining the aspect ratio of the image loaded into the effects module.
 	setImageAspectRatio(float imageAspectRatio)
