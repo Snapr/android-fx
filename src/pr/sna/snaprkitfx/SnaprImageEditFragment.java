@@ -919,7 +919,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			mBaseBitmapFilter = null; // null effects to release unused memory
 			mAppliedFilter = null;
 			mFilterPack = null; // remove all references to effects and stickers
-			mStickerPacks = null;
+			mStickerPacks.clear();
 			updateViewEditedImageView();
 			mEditedImageView.setVisibility(View.GONE);
 			mTabletop.setVisibility(View.GONE);
