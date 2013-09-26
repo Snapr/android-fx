@@ -1056,16 +1056,22 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			
 			if (DEBUG) JSATimeUtil.logTime();
 			
-			for (Filter filter : mFilterPack.getFilters())
-				filter.loadImagesNoException(mContext, mFilterPackLocation, new SimpleOnImageLoadListener());
-			if (DEBUG) JSATimeUtil.logTime("filter pack images loaded");
-			
-			for (int i=0; i<mStickerPacks.size(); i++)
+			if (mFilterPack != null)
 			{
-				for (Sticker sticker : mStickerPacks.get(i).getStickers())
-					sticker.loadImagesNoException(mContext, mStickerPackLocations.get(i), new SimpleOnImageLoadListener(i));
+				for (Filter filter : mFilterPack.getFilters())
+					filter.loadImagesNoException(mContext, mFilterPackLocation, new SimpleOnImageLoadListener());
+				if (DEBUG) JSATimeUtil.logTime("filter pack images loaded");
 			}
-			if (DEBUG) JSATimeUtil.logTime("sticker pack images loaded");
+			
+			if (mStickerPacks != null)
+			{
+				for (int i=0; i<mStickerPacks.size(); i++)
+				{
+					for (Sticker sticker : mStickerPacks.get(i).getStickers())
+						sticker.loadImagesNoException(mContext, mStickerPackLocations.get(i), new SimpleOnImageLoadListener(i));
+				}
+				if (DEBUG) JSATimeUtil.logTime("sticker pack images loaded");
+			}
 			
 			return true;
 		}
