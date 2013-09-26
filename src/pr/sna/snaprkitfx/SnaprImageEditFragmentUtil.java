@@ -203,6 +203,9 @@ public class SnaprImageEditFragmentUtil {
 			opts.inPreferredConfig = PREFERRED_BITMAP_CONFIG;
 			if (Build.VERSION.SDK_INT >= 11) opts.inMutable = true;
 			return BitmapFactory.decodeStream(fis, null, opts);
+		} catch (OutOfMemoryError e) {
+			e.printStackTrace();
+			return null;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			return null;
