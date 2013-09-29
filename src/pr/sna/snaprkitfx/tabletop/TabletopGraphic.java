@@ -4,6 +4,7 @@ import nz.co.juliusspencer.android.JSAGeometryUtil;
 import nz.co.juliusspencer.android.JSAMathUtil;
 import nz.co.juliusspencer.android.JSAMotionEventUtil;
 import pr.sna.snaprkitfx.R;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -22,6 +23,7 @@ import android.view.MotionEvent;
  * @see TabletopSurfaceView
  */
 
+@SuppressLint("WrongCall")
 public class TabletopGraphic implements Cloneable {
 	private final int mId;					// unique id assigned to the graphic by the surface
 	private final Bitmap mBitmap;			// the original bitmap being rendered
@@ -31,6 +33,7 @@ public class TabletopGraphic implements Cloneable {
 	private float mWidth;					// the width of the current render
 	private float mHeight;					// the height of the current render
 	private RectF mCropRegion;				// the region to crop the bitmap to
+	private float mBorder;					// the border around the image that ensures that the handles do not overlap
 	
 	private final GeometryHelper mGeometryHelper = new GeometryHelper();
 	
@@ -116,6 +119,7 @@ public class TabletopGraphic implements Cloneable {
 		mRotation = rotation;
 		mWidth = width;
 		mHeight = height;
+		mBorder = computeBorder();
 		notifyMatrixRefresh();
 		
 		mBoundingBoxPaint = new Paint();
@@ -130,6 +134,32 @@ public class TabletopGraphic implements Cloneable {
 		mBitmapPaint.setFilterBitmap(true);
 	}
 
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * border computation
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	
+	private float computeBorder()
+	{
+		// Assumption: down state images have the same size as up state images
+		
+		float values[] = {	DELETE_BITMAP_UP.getWidth()/2, DELETE_BITMAP_UP.getHeight()/2,
+							ROTATION_BITMAP_UP.getWidth()/2, ROTATION_BITMAP_UP.getHeight()/2,
+							PIN_BITMAP_UP.getWidth()/2, PIN_BITMAP_UP.getHeight()/2}; 
+		
+		return findLargestFloatArrayValue(values);
+	}
+	
+	private float findLargestFloatArrayValue(float values[])
+	{
+		float returnValue = -1 * Float.MAX_VALUE;
+		for (float f: values)
+		{
+			if (f > returnValue) returnValue = f;
+		}
+		
+		return returnValue;
+	}
+	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * crop region
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -297,7 +327,7 @@ public class TabletopGraphic implements Cloneable {
 		if (!isDeleted) canvas.drawBitmap(mBitmap, mMatrix, mBitmapPaint);
 		
 		// cache calculation
-		mGeometryHelper.setBounds(mRotation, mWidth, mHeight);
+		mGeometryHelper.setBounds(mRotation, mWidth + mBorder*2, mHeight + mBorder*2);
 		
 		// create the bounding box path
 		mBoundingBoxPath.reset();
@@ -475,7 +505,7 @@ public class TabletopGraphic implements Cloneable {
 	
 	/** Get whether or not the given point lays within the bounds of the delete button. */
 	private boolean withinBoundsDeleteButton(float x, float y) {
-		mGeometryHelper.setBounds(mRotation, mWidth, mHeight);
+		mGeometryHelper.setBounds(mRotation, mWidth + mBorder*2, mHeight + mBorder*2);
 		int w2 = DELETE_BITMAP_DOWN.getWidth() / 2;
 		int h2 = DELETE_BITMAP_DOWN.getHeight() / 2;
 		PointF center = mGeometryHelper.getCorner(0, mCenter);
@@ -485,7 +515,7 @@ public class TabletopGraphic implements Cloneable {
 	
 	/** Get whether or not the given point lays within the bounds of the rotation button. */
 	private boolean withinBoundsRotationButton(float x, float y) {
-		mGeometryHelper.setBounds(mRotation, mWidth, mHeight);
+		mGeometryHelper.setBounds(mRotation, mWidth + mBorder*2, mHeight + mBorder*2);
 		int w2 = ROTATION_BITMAP_DOWN.getWidth() / 2;
 		int h2 = ROTATION_BITMAP_DOWN.getHeight() / 2;
 		PointF center = mGeometryHelper.getCorner(2, mCenter);
@@ -495,7 +525,7 @@ public class TabletopGraphic implements Cloneable {
 	
 	/** Get whether or not the given point lays within the bounds of the pin button. */
 	private boolean withinBoundsPinButton(float x, float y) {
-		mGeometryHelper.setBounds(mRotation, mWidth, mHeight);
+		mGeometryHelper.setBounds(mRotation, mWidth + mBorder*2, mHeight + mBorder*2);
 		int w2 = PIN_BITMAP_DOWN.getWidth() / 2;
 		int h2 = PIN_BITMAP_DOWN.getHeight() / 2;
 		PointF center = mGeometryHelper.getCorner(1, mCenter);
@@ -505,7 +535,7 @@ public class TabletopGraphic implements Cloneable {
 	
 	/** Get whether or not the given point lays within the bounds of the graphic. */
 	private boolean withinBoundsGraphic(float x, float y) {
-		mGeometryHelper.setBounds(mRotation, mWidth, mHeight);
+		mGeometryHelper.setBounds(mRotation, mWidth + mBorder*2, mHeight + mBorder*2);
 		PointF[] points = mGeometryHelper.getCorners(mCenter);
 		return contains(points, new PointF(x, y));
 	}
