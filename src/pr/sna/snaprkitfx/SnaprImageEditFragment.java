@@ -1022,7 +1022,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 				mCurrentStickerPack = findStickerPackIndexBySlug(mStickerPacks, mLaunchStickerPackSlug, 0);
 				
 				initialiseStickerPackViews(STICKER_PACK_1, mStickerPacks.get(STICKER_PACK_1));
-				initialiseStickerPackViews(STICKER_PACK_2, mStickerPacks.get(STICKER_PACK_2));
+				if (mStickerPacks.size() > 1) initialiseStickerPackViews(STICKER_PACK_2, mStickerPacks.get(STICKER_PACK_2));
 			}
 
 			new LoadStickerFilterImagesAsyncTask(getActivity()).execute();
