@@ -6,5 +6,5 @@
     <dimen name="thumbnail_size">80dp</dimen>
     <dimen name="thumbnail_text_size">12sp</dimen>
     
-    <dimen name="button_divider_width">0dp</dimen>
+    <dimen name="button_divider_width">10dp</dimen>
 </resources>
