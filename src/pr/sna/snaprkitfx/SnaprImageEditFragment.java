@@ -104,7 +104,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private View mStickerButton, mSticker2Button, mSticker3Button;
 	private View mStickerMenuButton;
 	private LinearLayout mStickerMenu;
-	private LinearLayout mFilterOverlay;
+	private ImageView mFilterOverlay;
+	private Animation mFilterOverlayFadeIn, mFilterOverlayFadeOut;
 	
 	private View mCancelButton;
 	private View mNextButton;
@@ -222,8 +223,14 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			}
 		});
 		
-		//Initialize the button which brings up the sticker menu
+		//Initialize the dimming animation for the filter/sticker bar
 		mFilterOverlay = (ImageView) getView().findViewById(R.id.filter_overlay);
+		mFilterOverlayFadeIn = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_in);
+		mFilterOverlayFadeIn.setFillAfter(true);
+		mFilterOverlayFadeOut = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_out);
+		mFilterOverlayFadeOut.setFillAfter(true);
+		
+		//Initialize the button which brings up the sticker menu
 		mStickerMenu = (LinearLayout)getView().findViewById(R.id.triple_button_menu);
 		mStickerMenuButton = getView().findViewById(R.id.sticker_menu_button);
 		mStickerMenuButton.setOnClickListener(new View.OnClickListener() {
@@ -587,14 +594,18 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			mStickerButton.setBackgroundResource(R.drawable.snaprkitfx_btn_sticker);
 		} else if (numVisibleStickerPacks == 3) {
 			mStickerMenuButton.setVisibility(View.VISIBLE);
-			loadStickerMenu();
+			inflateStickerMenu();
 			if(mInteractionState == InteractionState.SHOWING_STICKER_MENU) {
-				if(mStickerMenu.getVisibility() == View.GONE) {
+				if (mStickerMenu.getVisibility() == View.GONE) {
 					mStickerMenu.setVisibility(View.VISIBLE);
-					
+					mFilterOverlay.startAnimation(mFilterOverlayFadeIn);
+					mFilterOverlay.setVisibility(View.VISIBLE);
 				}
 			} else {
-				mStickerMenu.setVisibility(View.GONE);
+				if (mStickerMenu.getVisibility() == View.VISIBLE) {
+					mStickerMenu.setVisibility(View.GONE);
+					mFilterOverlay.startAnimation(mFilterOverlayFadeOut);
+				}
 			}
 		}
 		
@@ -621,7 +632,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	 * Call this if you want to load three sticker packs, it will properly
 	 * move the buttons into the menu.
 	 */
-	private void loadStickerMenu() {
+	private void inflateStickerMenu() {
 		ViewGroup parent = (ViewGroup)mSticker2Button.getParent();
 		parent.removeView(mStickerButton);
 		parent.removeView(mSticker2Button);
@@ -639,6 +650,9 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		((ImageView)mStickerButton).setImageResource(R.drawable.snaprkit_pink_text_pink_school_spirit);
 		((ImageView)mSticker2Button).setImageResource(R.drawable.snaprkit_pink_text_pink_fashion_show);
 		((ImageView)mSticker3Button).setImageResource(R.drawable.snaprkit_pink_text_pink_spring_break);
+	
+		mStickerButton.setPadding(0, getActivity().getResources().getDimensionPixelOffset(R.dimen.pink_sticker_menu_offset), 0, 0);
+		mSticker3Button.setPadding(0, 0, 0, getActivity().getResources().getDimensionPixelOffset(R.dimen.pink_sticker_menu_offset));
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -835,6 +849,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	
 	private void onStickerClick(View v) {
 		if (!isAdded()) return;
+		mInteractionState = InteractionState.SHOWING_STICKERS;
 		Sticker sticker = (Sticker) v.getTag();
 		if (sticker == null) return;
 		
