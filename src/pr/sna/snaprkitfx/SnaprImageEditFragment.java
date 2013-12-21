@@ -647,9 +647,9 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mSticker2Button.setBackgroundResource(R.drawable.snaprkit_pink_sticker_middle);
 		mSticker3Button.setBackgroundResource(R.drawable.snaprkit_pink_sticker_bottom);
 		
-		((ImageView)mStickerButton).setImageResource(R.drawable.snaprkit_pink_text_pink_school_spirit);
-		((ImageView)mSticker2Button).setImageResource(R.drawable.snaprkit_pink_text_pink_fashion_show);
-		((ImageView)mSticker3Button).setImageResource(R.drawable.snaprkit_pink_text_pink_spring_break);
+		((ImageView)mStickerButton).setImageResource(R.drawable.snaprkit_pink_text_pink_school_spirit_selector);
+		((ImageView)mSticker2Button).setImageResource(R.drawable.snaprkit_pink_text_pink_fashion_show_selector);
+		((ImageView)mSticker3Button).setImageResource(R.drawable.snaprkit_pink_text_pink_spring_break_selector);
 	
 		mStickerButton.setPadding(0, getActivity().getResources().getDimensionPixelOffset(R.dimen.pink_sticker_menu_offset), 0, 0);
 		mSticker3Button.setPadding(0, 0, 0, getActivity().getResources().getDimensionPixelOffset(R.dimen.pink_sticker_menu_offset));
