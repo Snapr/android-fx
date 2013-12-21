@@ -166,7 +166,7 @@
 
         <View
             android:id="@+id/button_divider"
-            android:layout_width="@dimen/button_divider_width"
+            android:layout_width="0dp"
             android:layout_height="0dp" />
 
         <ImageView
