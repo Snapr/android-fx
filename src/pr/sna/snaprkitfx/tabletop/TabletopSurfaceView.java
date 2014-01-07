@@ -9,6 +9,8 @@ import java.util.List;
 import nz.co.juliusspencer.android.JSAFileUtil;
 import nz.co.juliusspencer.android.JSAMotionEventUtil;
 import pr.sna.snaprkitfx.R;
+import pr.sna.snaprkitfx.SnaprImageEditFragment.CropInformation;
+import pr.sna.snaprkitfx.SnaprImageView;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -85,6 +87,7 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	
 	private boolean mForceGraphicsBoundingBoxDraw;							// whether or not to force the graphics to draw their bounding boxes
 	
+	private CropInformation mCropInformation;
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * constants
@@ -240,6 +243,13 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	public void setAutoPinGraphics(boolean autopin) {
 		mAutoPinGraphics = autopin;
 	}
+
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	 * crop information
+	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	public void setCropInformation(CropInformation cropInformation) {
+		mCropInformation = cropInformation;
+	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * spinner
@@ -287,9 +297,34 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	 * on touch event
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
+	private OnTouchListener mTouchListener;
+	
+	@Override
+	public void setOnTouchListener(OnTouchListener l) {
+		if(l instanceof SnaprImageView) {
+			mTouchListener = l;
+		} else {
+			super.setOnTouchListener(l);
+		}
+	};
+	
 	@Override public boolean onTouchEvent(MotionEvent event) {
 		int action = JSAMotionEventUtil.getActionMasked(event);
 		int pointerId = event.getPointerId(JSAMotionEventUtil.getActionIndex(event));
+		
+		if(mActiveGraphic == null && mTouchListener != null) {
+			mTouchListener.onTouch((SnaprImageView)mTouchListener, event);
+		}
+		
+		if(mCropInformation != null) {
+			float mouseX = event.getX();
+			float mouseY = event.getY();
+	
+			mouseX = mCropInformation.getPivotX() + (mouseX - mCropInformation.getPivotX())/mCropInformation.getScaleFactor();
+			mouseY = mCropInformation.getPivotY() + (mouseY - mCropInformation.getPivotY())/mCropInformation.getScaleFactor();
+
+			event.setLocation(mouseX, mouseY);
+		}
 		
 		// dispatch the cancel action to the active graphic if interaction is not enabled
 		if (!mInteractionEnabled) {
@@ -546,7 +581,18 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 	@Override public void onDraw(Canvas canvas) {
-		super.onDraw(canvas);
+		if(mCropInformation != null) {
+			//Perform the cropping/scale attributes on the image
+			if(mCropInformation.getPivotX() < 0) mCropInformation.setPivotX(0);
+			else if (mCropInformation.getPivotX() > canvas.getWidth()) mCropInformation.setPivotX(canvas.getWidth());
+			if(mCropInformation.getPivotY() < 0) mCropInformation.setPivotY(0);
+			else if (mCropInformation.getPivotY() > canvas.getHeight()) mCropInformation.setPivotY(canvas.getHeight());
+	
+		    canvas.save();
+		    canvas.scale(mCropInformation.getScaleFactor(), mCropInformation.getScaleFactor(), mCropInformation.getPivotX(), mCropInformation.getPivotY());
+		}
+	    
+	    super.onDraw(canvas);
 		
 		// return if the canvas is invalid
 		if (canvas == null) return;
@@ -554,14 +600,15 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 		// clear the canvas
 		canvas.drawColor(0, PorterDuff.Mode.CLEAR);
 		
-		// draw the crop region
-		if (mCropRegion != null && mCropRegionPaint != null) canvas.drawRect(mCropRegion, mCropRegionPaint);
-		
 		// draw the background region (debug)
 		if (DEBUG) canvas.drawColor(0x22FFFFFF);
 		
 		// return if no drawing is required
-		if (!mDrawGraphics) return;
+		if (!mDrawGraphics) {
+			// draw the crop region
+			if (mCropRegion != null && mCropRegionPaint != null) canvas.drawRect(mCropRegion, mCropRegionPaint);
+			return;
+		}
 		
 		synchronized (TabletopSurfaceView.this) {
 			
@@ -573,12 +620,18 @@ public class TabletopSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 			for (TabletopGraphic graphic : mForegroundGraphics) 
 				graphic.onDraw(canvas, null);
 		}
+		
+		// draw the crop region
+		if (mCropRegion != null && mCropRegionPaint != null) canvas.drawRect(mCropRegion, mCropRegionPaint);
 
 		// draw the spinner (if required)
 		if (!mShowSpinner) return;
 		int level = (int) (((mSpinnerStartTime - System.currentTimeMillis()) * mSpinnerRotationSpeedFactor) % 10000);
 		mSpinnerLayerDrawable.setLevel(level);
 		mSpinnerLayerDrawable.draw(canvas);
+
+		if(mCropInformation != null) 
+			canvas.restore();
 	}
 
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

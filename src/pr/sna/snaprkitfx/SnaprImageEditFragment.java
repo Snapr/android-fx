@@ -74,6 +74,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	
 	private Handler mUiThreadHandler;			// handler to run actions on the ui thread
 	
+	private CropInformation mCropInformation; 	//Object which holds scale/crop information
+	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * runnable
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -86,7 +88,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 
 	private boolean mViewsInitialised;
 	
-	private ImageView mEditedImageView;
+	private SnaprImageView mEditedImageView;
 	private TabletopSurfaceView mTabletop;
 	private TextView mMessageTextView;
 
@@ -147,6 +149,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		super.onActivityCreated(savedInstanceState);
 		super.setRetainInstance(true);
 		mUiThreadHandler = new Handler();
+		mCropInformation = new CropInformation();
 		
 		mFilterPackLocation = extras.getString(SnaprImageEditFragmentActivity.EXTRA_FILTER_PACK_PATH);
 		mStickerPackLocations = extras.getStringArrayList(SnaprImageEditFragmentActivity.EXTRA_STICKER_PACK_PATHS);
@@ -162,10 +165,13 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		if (mImageAspectRatio == 0) mImageAspectRatio = 1.0f;  
 		
 		mButtonDivider = getView().findViewById(R.id.button_divider);
-		mEditedImageView = (ImageView) getView().findViewById(R.id.edited_image);
+		mEditedImageView = (SnaprImageView) getView().findViewById(R.id.edited_image);
 		mTabletop = (TabletopSurfaceView) getView().findViewById(R.id.tabletop);
+		mTabletop.setOnTouchListener(mEditedImageView);
 		mMessageTextView = (TextView) getView().findViewById(R.id.message_textview);
 		initialiseMessageTextView();
+		mEditedImageView.setCropInformation(mCropInformation);
+		mTabletop.setCropInformation(mCropInformation);
 		
 		mFilterContainer = (ViewGroup) getView().findViewById(R.id.filter_container);
 		mStickerContainer = (ViewGroup) getView().findViewById(R.id.sticker_container);
@@ -240,23 +246,27 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 				if (mStickerMenu.getVisibility() == View.VISIBLE) {
 					mInteractionState = InteractionState.SHOWING_STICKERS;
 				} else {
-					mInteractionState = InteractionState.SHOWING_STICKER_MENU;
-					switch (mCurrentStickerPack) {
-					case STICKER_PACK_1:
-						mStickerButton.setSelected(true);
-						mSticker2Button.setSelected(false);
-						mSticker3Button.setSelected(false);
-						break;
-					case STICKER_PACK_2:
-						mStickerButton.setSelected(false);
-						mSticker2Button.setSelected(true);
-						mSticker3Button.setSelected(false);
-						break;
-					case STICKER_PACK_3:
-						mStickerButton.setSelected(false);
-						mSticker2Button.setSelected(false);
-						mSticker3Button.setSelected(true);
-						break;
+					if(mInteractionState == InteractionState.SHOWING_STICKERS) {
+						mInteractionState = InteractionState.SHOWING_STICKER_MENU;
+						switch (mCurrentStickerPack) {
+						case STICKER_PACK_1:
+							mStickerButton.setSelected(true);
+							mSticker2Button.setSelected(false);
+							mSticker3Button.setSelected(false);
+							break;
+						case STICKER_PACK_2:
+							mStickerButton.setSelected(false);
+							mSticker2Button.setSelected(true);
+							mSticker3Button.setSelected(false);
+							break;
+						case STICKER_PACK_3:
+							mStickerButton.setSelected(false);
+							mSticker2Button.setSelected(false);
+							mSticker3Button.setSelected(true);
+							break;
+						}
+					} else {
+						mInteractionState = InteractionState.SHOWING_STICKERS;
 					}
 				}
 				updateView();
@@ -593,15 +603,21 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			mFilterButton.setBackgroundResource(R.drawable.snaprkitfx_btn_filter);
 			mStickerButton.setBackgroundResource(R.drawable.snaprkitfx_btn_sticker);
 		} else if (numVisibleStickerPacks == 3) {
-			mStickerMenuButton.setVisibility(View.VISIBLE);
+			mStickerMenuButton.setVisibility(hasFilters && hasStickers ? View.VISIBLE : View.GONE);
 			inflateStickerMenu();
 			if(mInteractionState == InteractionState.SHOWING_STICKER_MENU) {
+				mStickerMenuButton.setSelected(true);
 				if (mStickerMenu.getVisibility() == View.GONE) {
 					mStickerMenu.setVisibility(View.VISIBLE);
 					mFilterOverlay.startAnimation(mFilterOverlayFadeIn);
 					mFilterOverlay.setVisibility(View.VISIBLE);
 				}
 			} else {
+				if(mInteractionState == InteractionState.SHOWING_STICKERS) {
+					mStickerMenuButton.setSelected(true);
+				} else {
+					mStickerMenuButton.setSelected(false);
+				}
 				if (mStickerMenu.getVisibility() == View.VISIBLE) {
 					mStickerMenu.setVisibility(View.GONE);
 					mFilterOverlay.startAnimation(mFilterOverlayFadeOut);
@@ -1242,6 +1258,33 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		System.loadLibrary("snapr-jni");
 	}
 
-	
+	public static class CropInformation {
+		private float mScaleFactor = 1.0f;
+		private float mPivotX = 0, mPivotY = 0;
+		
+		public float getScaleFactor() {
+			return mScaleFactor;
+		}
+		
+		public float getPivotX() {
+			return mPivotX;
+		}
+		
+		public float getPivotY() {
+			return mPivotY;
+		}
+		
+		public void setScaleFactor(float scaleFactor) {
+			mScaleFactor = scaleFactor;
+		}
+		
+		public void setPivotX(float pivotX) {
+			mPivotX = pivotX;
+		}
+		
+		public void setPivotY(float pivotY) {
+			mPivotY = pivotY;
+		}
+	}
 	
 }
