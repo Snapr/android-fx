@@ -196,7 +196,6 @@
             android:id="@+id/sticker_menu_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="0.5dp"
             android:background="@drawable/snaprkit_pink_sticker_menu"
             android:contentDescription="@string/snaprkitfx_empty_content_description"
             android:visibility="gone" />

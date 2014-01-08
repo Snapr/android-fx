@@ -614,6 +614,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 				}
 			} else {
 				if(mInteractionState == InteractionState.SHOWING_STICKERS) {
+					mTabletop.setInteractionEnabled(true);
 					mStickerMenuButton.setSelected(true);
 				} else {
 					mStickerMenuButton.setSelected(false);
