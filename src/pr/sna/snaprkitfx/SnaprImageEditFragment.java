@@ -42,6 +42,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class SnaprImageEditFragment extends Fragment implements TabletopListener {
+	
+	//Analytics
+	public static final String STICKER_MENU_SHOW_ANALYTICS = "snaprkit-parent://coremetrics/?tag_type=Conversion Event&category_id=ANDROID_APP_PICS_SECTION_P&cid=CLICKS_STICKERS_DROPDOWN&tid=14&action_type=2";
+	public static final String STICKER_PACK_ANALYTICS = "snaprkit-parent://coremetrics/?tag_type=Conversion Event&category_id=ANDROID_APP_PICS_SECTION_P&cid=CLICKS_%s_STICKERS&tid=14&action_type=2";
+	
 	private static final int STICKER_PACK_1 = 0;
 	private static final int STICKER_PACK_2 = 1;
 	private static final int STICKER_PACK_3 = 2;
@@ -241,6 +246,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 					mInteractionState = InteractionState.SHOWING_STICKERS;
 				} else {
 					if(mInteractionState == InteractionState.SHOWING_STICKERS) {
+						((SnaprImageEditFragmentActivity)getActivity()).onAddAnalytic(STICKER_MENU_SHOW_ANALYTICS);
 						mInteractionState = InteractionState.SHOWING_STICKER_MENU;
 						switch (mCurrentStickerPack) {
 						case STICKER_PACK_1:
@@ -801,6 +807,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		
 		mInteractionState = InteractionState.SHOWING_STICKERS;
 		mCurrentStickerPack = stickerPackIndex;
+		((SnaprImageEditFragmentActivity)getActivity()).onAddAnalytic(STICKER_PACK_ANALYTICS, mStickerPacks.get(mCurrentStickerPack).getSlug());
 		mTabletop.setInteractionEnabled(true);
 		updateViewEditedImageView();
 		updateViewProgress();
