@@ -74,8 +74,6 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	
 	private Handler mUiThreadHandler;			// handler to run actions on the ui thread
 	
-	private CropInformation mCropInformation; 	//Object which holds scale/crop information
-	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 * runnable
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -88,7 +86,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 
 	private boolean mViewsInitialised;
 	
-	private SnaprImageView mEditedImageView;
+	private ImageView mEditedImageView;
 	private TabletopSurfaceView mTabletop;
 	private TextView mMessageTextView;
 
@@ -149,7 +147,6 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		super.onActivityCreated(savedInstanceState);
 		super.setRetainInstance(true);
 		mUiThreadHandler = new Handler();
-		mCropInformation = new CropInformation();
 		
 		mFilterPackLocation = extras.getString(SnaprImageEditFragmentActivity.EXTRA_FILTER_PACK_PATH);
 		mStickerPackLocations = extras.getStringArrayList(SnaprImageEditFragmentActivity.EXTRA_STICKER_PACK_PATHS);
@@ -165,13 +162,10 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		if (mImageAspectRatio == 0) mImageAspectRatio = 1.0f;  
 		
 		mButtonDivider = getView().findViewById(R.id.button_divider);
-		mEditedImageView = (SnaprImageView) getView().findViewById(R.id.edited_image);
+		mEditedImageView = (ImageView) getView().findViewById(R.id.edited_image);
 		mTabletop = (TabletopSurfaceView) getView().findViewById(R.id.tabletop);
-		mTabletop.setOnTouchListener(mEditedImageView);
 		mMessageTextView = (TextView) getView().findViewById(R.id.message_textview);
 		initialiseMessageTextView();
-		mEditedImageView.setCropInformation(mCropInformation);
-		mTabletop.setCropInformation(mCropInformation);
 		
 		mFilterContainer = (ViewGroup) getView().findViewById(R.id.filter_container);
 		mStickerContainer = (ViewGroup) getView().findViewById(R.id.sticker_container);
@@ -1256,35 +1250,6 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 
 	static {
 		System.loadLibrary("snapr-jni");
-	}
-
-	public static class CropInformation {
-		private float mScaleFactor = 1.0f;
-		private float mPivotX = 0, mPivotY = 0;
-		
-		public float getScaleFactor() {
-			return mScaleFactor;
-		}
-		
-		public float getPivotX() {
-			return mPivotX;
-		}
-		
-		public float getPivotY() {
-			return mPivotY;
-		}
-		
-		public void setScaleFactor(float scaleFactor) {
-			mScaleFactor = scaleFactor;
-		}
-		
-		public void setPivotX(float pivotX) {
-			mPivotX = pivotX;
-		}
-		
-		public void setPivotY(float pivotY) {
-			mPivotY = pivotY;
-		}
 	}
 	
 }

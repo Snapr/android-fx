@@ -15,7 +15,7 @@
         android:layout_weight="1"
         android:padding="5dp" >
 
-        <pr.sna.snaprkitfx.SnaprImageView
+        <ImageView
             android:id="@+id/edited_image"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
