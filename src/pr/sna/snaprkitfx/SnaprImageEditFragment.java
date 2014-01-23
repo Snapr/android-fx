@@ -592,7 +592,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		
 		// update the filter and sticker buttons backgrounds
 		if (numVisibleStickerPacks == 2) {
-			mFilterButton.setBackgroundResource(R.drawable.snaprkitfx_btn_3btn_filter);
+			mFilterButton.setBackgroundResource(R.drawable.snaprkitfx_btn_filter);
 			mStickerButton.setBackgroundResource(R.drawable.snaprkitfx_btn_3btn_sticker);
 			mSticker2Button.setBackgroundResource(R.drawable.snaprkitfx_btn_3btn_sticker2);
 		} else if (numVisibleStickerPacks == 1) {
