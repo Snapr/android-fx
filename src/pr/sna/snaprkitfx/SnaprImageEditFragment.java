@@ -245,28 +245,24 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 				if (mStickerMenu.getVisibility() == View.VISIBLE) {
 					mInteractionState = InteractionState.SHOWING_STICKERS;
 				} else {
-					if(mInteractionState == InteractionState.SHOWING_STICKERS) {
-						((SnaprImageEditFragmentActivity)getActivity()).onAddAnalytic(STICKER_MENU_SHOW_ANALYTICS);
-						mInteractionState = InteractionState.SHOWING_STICKER_MENU;
-						switch (mCurrentStickerPack) {
-						case STICKER_PACK_1:
-							mStickerButton.setSelected(true);
-							mSticker2Button.setSelected(false);
-							mSticker3Button.setSelected(false);
-							break;
-						case STICKER_PACK_2:
-							mStickerButton.setSelected(false);
-							mSticker2Button.setSelected(true);
-							mSticker3Button.setSelected(false);
-							break;
-						case STICKER_PACK_3:
-							mStickerButton.setSelected(false);
-							mSticker2Button.setSelected(false);
-							mSticker3Button.setSelected(true);
-							break;
-						}
-					} else {
-						mInteractionState = InteractionState.SHOWING_STICKERS;
+					((SnaprImageEditFragmentActivity)getActivity()).onAddAnalytic(STICKER_MENU_SHOW_ANALYTICS);
+					mInteractionState = InteractionState.SHOWING_STICKER_MENU;
+					switch (mCurrentStickerPack) {
+					case STICKER_PACK_1:
+						mStickerButton.setSelected(true);
+						mSticker2Button.setSelected(false);
+						mSticker3Button.setSelected(false);
+						break;
+					case STICKER_PACK_2:
+						mStickerButton.setSelected(false);
+						mSticker2Button.setSelected(true);
+						mSticker3Button.setSelected(false);
+						break;
+					case STICKER_PACK_3:
+						mStickerButton.setSelected(false);
+						mSticker2Button.setSelected(false);
+						mSticker3Button.setSelected(true);
+						break;
 					}
 				}
 				updateView();
