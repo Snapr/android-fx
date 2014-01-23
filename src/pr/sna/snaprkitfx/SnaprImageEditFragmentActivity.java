@@ -78,11 +78,11 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 	public static final String ANALYTIC_CANCEL_EVENT = "snaprkit-parent://coremetrics/?tag_type=Manual Link Click&cm_re=spring2012-_-sub-_-cancel_image_upload& link_name=CANCEL IMAGE UPLOAD&page_id=ANDROID_VSPINK_APP_PICS_FILTERS_SELECT_P"; 
 	public static final String ANALYTIC_SHARE_EVENT = "snaprkit-parent://coremetrics/?tag_type=Conversion Event& link_name=CANCEL IMAGE UPLOAD& category_id=VSPINK_APP_PICS_FILTERS_SELECTED_P&element_id=ANDROID_APP_FILTERS_SELECTED_(FILTER_NAME)&action_type=2";
 	// sticker added
-	public static final String ANALYTIC_STICKER_ADDED_EVENT = "snaprkit-parent://coremetrics/?tag_type=Real Estate&&tid=8cm_re=012714-_-springbreak-_-filter_%s";
+	public static final String ANALYTIC_STICKER_ADDED_EVENT = "snaprkit-parent://coremetrics/?tag_type=Real Estate&tid=8&cm_re=012714-_-springbreak-_-filter_%s";
 	public static final String ANALYTIC_STICKER_REMOVED_EVENT = "snaprkit-parent://coremetrics/?tag_type=Conversion Event&category_id=ANDROID_APP_PINKS_GOT_SPIRIT_GAMEDAY_P&link_name=ANDROID_APP_CLICKS_X&action_type=2";
 	public static final String ANALYTIC_STICKERS_PINNED_EVENT = "snaprkit-parent://coremetrics/?tag_type=Conversion Event&category_id=ANDROID_APP_PINKS_GOT_SPIRIT_GAMEDAY_P&link_name=ANDROID_APP_CLICKS_CHECK_MARK&action_type=2";
 	// filter added
-	public static final String ANALYTIC_FILTER_ADDED_EVENT = "snaprkit-parent://coremetrics/?tag_type=Real Estate&&tid=8cm_re=012714-_-springbreak-_-sticker_%s";
+	public static final String ANALYTIC_FILTER_ADDED_EVENT = "snaprkit-parent://coremetrics/?tag_type=Real Estate&tid=8&cm_re=012714-_-springbreak-_-sticker_%s";
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * on create
