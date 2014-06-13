@@ -201,6 +201,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mFilterButton = getView().findViewById(R.id.filter_button);
 		mFilterButton.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View v) {
+				Log.d("Alecs log", "Filter click " + System.currentTimeMillis());
 				onFilterButtonClick();
 			}
 		});
@@ -242,6 +243,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			
 			@Override
 			public void onClick(View v) {
+				Log.d("Alecs log", "Sticker click " + System.currentTimeMillis());
 				if (mStickerMenu.getVisibility() == View.VISIBLE) {
 					mInteractionState = InteractionState.SHOWING_STICKERS;
 				} else {
@@ -589,7 +591,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mStickerButton.setSelected(isShowingStickers1);
 		mSticker2Button.setVisibility(hasStickers2 && hasFilters? View.VISIBLE : View.GONE);
 		mSticker2Button.setSelected(isShowingStickers2);
-		
+
+		Log.d("Alecs log", "4: " + System.currentTimeMillis());
 		// update the filter and sticker buttons backgrounds
 		if (numVisibleStickerPacks == 2) {
 			mFilterButton.setBackgroundResource(R.drawable.snaprkitfx_btn_filter);
@@ -599,8 +602,10 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			mFilterButton.setBackgroundResource(R.drawable.snaprkitfx_btn_filter);
 			mStickerButton.setBackgroundResource(R.drawable.snaprkitfx_btn_sticker);
 		} else if (numVisibleStickerPacks == 3) {
+			mFilterButton.setBackgroundResource(R.drawable.snaprkit_pink_filter);
 			mStickerMenuButton.setVisibility(hasFilters && hasStickers ? View.VISIBLE : View.GONE);
 			inflateStickerMenu();
+			Log.d("Alecs log", "5: " + System.currentTimeMillis());
 			if(mInteractionState == InteractionState.SHOWING_STICKER_MENU) {
 				mStickerMenuButton.setSelected(true);
 				if (mStickerMenu.getVisibility() == View.GONE) {
@@ -626,19 +631,27 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mButtonDivider.setVisibility(hasFilters && hasStickers ? View.VISIBLE : View.GONE);
 		
 		// update the locked message
+		Log.d("Alecs log", "6: " + System.currentTimeMillis());
 		if (mAppliedFilter != null && isFilterLocked) setFilterLockMessage(mAppliedFilter.getSettings().getUnlockMessage());
 		if (mLastAppliedSticker != null && isStickerLocked) setStickerLockMessage(mLastAppliedSticker.getSettings().getUnlockMessage());
 		mMessageTextView.setVisibility(isFilterLocked || isStickerLocked ? View.VISIBLE : View.INVISIBLE);
+		Log.d("Alecs log", "7: " + System.currentTimeMillis());
 		
 		// update the next button
+		Log.d("Alecs log", "8: " + System.currentTimeMillis());
 		boolean isNextButton = hasStickers && hasFilters && isShowingFilters;
 		int resourceId = isNextButton ? R.drawable.snaprkitfx_btn_next : R.drawable.snaprkitfx_btn_tick;
 		mNextButton.setBackgroundResource(resourceId);
 		mNextButton.setEnabled(isNextButton || (!isFilterLocked && !isStickerLocked));
+		Log.d("Alecs log", "9: " + System.currentTimeMillis());
 		
 		// show or hide the tabletop (prevent showing the tabletop when rendering the final image)
 		boolean isImageVisible = mEditedImageView.getVisibility() == View.VISIBLE;
+		Log.d("Alecs log", "10: " + System.currentTimeMillis());
 		mTabletop.setVisibility(isShowingFilters || !isImageVisible ? View.GONE : View.VISIBLE);
+		Log.d("Alecs log", "11: " + System.currentTimeMillis());
+		
+		Log.d("Alecs log", "Done update " + System.currentTimeMillis());
 	}
 	
 	/**
@@ -788,8 +801,11 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mInteractionState = InteractionState.SHOWING_FILTERS;
 		mTabletop.setInteractionEnabled(false);
 		mTabletop.pinAllGraphics();
+		Log.d("Alecs log", "1: " + System.currentTimeMillis());
 		updateViewEditedImageView();
+		Log.d("Alecs log", "2: " + System.currentTimeMillis());
 		updateViewProgress();
+		Log.d("Alecs log", "3: " + System.currentTimeMillis());
 		updateView();
 	}
 	
