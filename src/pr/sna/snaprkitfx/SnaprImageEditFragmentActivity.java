@@ -216,10 +216,7 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
 	@Override public void onBackPressed() {
-		Intent intent = getPackageManager().getLaunchIntentForPackage(getApplicationContext().getPackageName());
-		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-		intent.putExtra("startCamera", true);
-		getApplicationContext().startActivity(intent);
+		((SnaprKitApplication)getApplication()).startCameraActivity();
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
