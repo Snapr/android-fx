@@ -15,6 +15,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
@@ -215,7 +216,10 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
 	@Override public void onBackPressed() {
-		optionallyFinishActivity();
+		Intent intent = getPackageManager().getLaunchIntentForPackage(getApplicationContext().getPackageName());
+		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+		intent.putExtra("startCamera", true);
+		getApplicationContext().startActivity(intent);
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -243,7 +247,7 @@ public class SnaprImageEditFragmentActivity extends FragmentActivity implements 
 		Intent i = new Intent();
 		i.putStringArrayListExtra(EXTRA_ANALYTICS, getAnalytics());
 		setResult(RESULT_CANCELED, i);
-		finish();
+		onBackPressed();
 	}
 	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

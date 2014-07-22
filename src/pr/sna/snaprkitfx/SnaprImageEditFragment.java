@@ -20,6 +20,7 @@ import pr.sna.snaprkitfx.tabletop.TabletopSurfaceView;
 import pr.sna.snaprkitfx.tabletop.TabletopSurfaceView.TabletopListener;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -106,11 +107,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private View mStickerContainerRoot;
 	private View mSticker2ContainerRoot;
 	private View mSticker3ContainerRoot;
-	private View mStickerButton, mSticker2Button, mSticker3Button;
-	private View mStickerMenuButton;
-	private LinearLayout mStickerMenu;
-	private ImageView mFilterOverlay;
-	private Animation mFilterOverlayFadeIn, mFilterOverlayFadeOut;
+	private View mStickerButton;
+	private ImageView customBg;
 	
 	private View mCancelButton;
 	private View mNextButton;
@@ -166,7 +164,6 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mImageAspectRatio = extras.getFloat(SnaprImageEditFragmentActivity.EXTRA_IMAGE_ASPECT_RATIO);
 		if (mImageAspectRatio == 0) mImageAspectRatio = 1.0f;  
 		
-		mButtonDivider = getView().findViewById(R.id.button_divider);
 		mEditedImageView = (ImageView) getView().findViewById(R.id.edited_image);
 		mTabletop = (TabletopSurfaceView) getView().findViewById(R.id.tabletop);
 		mMessageTextView = (TextView) getView().findViewById(R.id.message_textview);
@@ -176,6 +173,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mStickerContainer = (ViewGroup) getView().findViewById(R.id.sticker_container);
 		mSticker2Container = (ViewGroup) getView().findViewById(R.id.sticker2_container);
 		mSticker3Container = (ViewGroup) getView().findViewById(R.id.sticker3_container);
+		
+		customBg = (ImageView) getView().findViewById(R.id.custom_bg);
 		
 		mCancelButton = getView().findViewById(R.id.cancel_button);
 		mCancelButton.setOnClickListener(new View.OnClickListener() {
@@ -211,63 +210,6 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mStickerButton.setOnClickListener(new View.OnClickListener() {
 			@Override public void onClick(View v) {
 				onStickerButtonClick(STICKER_PACK_1);
-			}
-		});
-		
-		// handle sticker button clicks by showing the stickers
-		mSticker2Button = getView().findViewById(R.id.sticker2_button);
-		mSticker2Button.setOnClickListener(new View.OnClickListener() {
-			@Override public void onClick(View v) {
-				onStickerButtonClick(STICKER_PACK_2);
-			}
-		});
-		
-		mSticker3Button = getView().findViewById(R.id.sticker3_button);
-		mSticker3Button.setOnClickListener(new View.OnClickListener() {
-			@Override public void onClick(View v) {
-				onStickerButtonClick(STICKER_PACK_3);
-			}
-		});
-		
-		//Initialize the dimming animation for the filter/sticker bar
-		mFilterOverlay = (ImageView) getView().findViewById(R.id.filter_overlay);
-		mFilterOverlayFadeIn = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_in);
-		mFilterOverlayFadeIn.setFillAfter(true);
-		mFilterOverlayFadeOut = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_out);
-		mFilterOverlayFadeOut.setFillAfter(true);
-		
-		//Initialize the button which brings up the sticker menu
-		mStickerMenu = (LinearLayout)getView().findViewById(R.id.triple_button_menu);
-		mStickerMenuButton = getView().findViewById(R.id.sticker_menu_button);
-		mStickerMenuButton.setOnClickListener(new View.OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				Log.d("Alecs log", "Sticker click " + System.currentTimeMillis());
-				if (mStickerMenu.getVisibility() == View.VISIBLE) {
-					mInteractionState = InteractionState.SHOWING_STICKERS;
-				} else {
-					((SnaprImageEditFragmentActivity)getActivity()).onAddAnalytic(STICKER_MENU_SHOW_ANALYTICS);
-					mInteractionState = InteractionState.SHOWING_STICKER_MENU;
-					switch (mCurrentStickerPack) {
-					case STICKER_PACK_1:
-						mStickerButton.setSelected(true);
-						mSticker2Button.setSelected(false);
-						mSticker3Button.setSelected(false);
-						break;
-					case STICKER_PACK_2:
-						mStickerButton.setSelected(false);
-						mSticker2Button.setSelected(true);
-						mSticker3Button.setSelected(false);
-						break;
-					case STICKER_PACK_3:
-						mStickerButton.setSelected(false);
-						mSticker2Button.setSelected(false);
-						mSticker3Button.setSelected(true);
-						break;
-					}
-				}
-				updateView();
 			}
 		});
 		
@@ -425,6 +367,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 		
 		// create the thumbnail views for each effect
+		int i = 0;
 		for (Filter filter : mFilterPack.getFilters()) {
 			View view = inflater.inflate(R.layout.snaprkitfx_effect_item, null);
 			view.setTag(filter);
@@ -434,8 +377,28 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			else image.setImageResource(R.drawable.snaprkitfx_ic_effect_placeholder);
 			image.setTag(filter);
 
-			TextView tv = ((TextView) view.findViewById(R.id.effect_textview));
-			tv.setText(filter.getName());
+			TextView tv = ((TextView) view.findViewById(R.id.effect_text));
+			tv.setText(filter.getName().toUpperCase());
+			tv.setTextColor(Color.BLACK);
+			
+			switch((i++)%5) {
+			case 0:
+				view.setBackgroundResource(R.drawable.snaprkit_fx_filter_bg_0);
+				tv.setTextColor(getResources().getColor(R.color.pink));
+				break;
+			case 1:
+				view.setBackgroundResource(R.drawable.snaprkit_fx_filter_bg_1);
+				break;
+			case 2:
+				view.setBackgroundResource(R.drawable.snaprkit_fx_filter_bg_2);
+				break;
+			case 3:
+				view.setBackgroundResource(R.drawable.snaprkit_fx_filter_bg_3);
+				break;
+			case 4:
+				view.setBackgroundResource(R.drawable.snaprkit_fx_filter_bg_4);
+				break;
+			}
 
 			image.setOnClickListener(new View.OnClickListener() {
 				@Override public void onClick(View view) {
@@ -444,6 +407,10 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			});
 
 			mFilterContainer.addView(view);
+			if(i > 1)
+				((LinearLayout.LayoutParams)view.getLayoutParams()).leftMargin = -180;
+			else
+				((LinearLayout.LayoutParams)view.getLayoutParams()).leftMargin = 50;
 		}
 	}
 	
@@ -483,6 +450,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	private void initialiseStickerPackViews(int stickerPackIndex, StickerPack stickerPack) {
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 
+		int i = 0;
 		// create the thumbnail views for each sticker		
 		for (Sticker sticker : stickerPack.getStickers()) {
 			View view = inflater.inflate(R.layout.snaprkitfx_effect_item, null);
@@ -493,8 +461,29 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			else image.setImageResource(R.drawable.snaprkitfx_ic_sticker_placeholder);
 			image.setTag(sticker);
 			
-			TextView tv = ((TextView) view.findViewById(R.id.effect_textview));
-			tv.setText(sticker.getName());
+			switch((i++)%5) {
+			case 0:
+				view.setBackgroundResource(R.drawable.snaprkit_fx_sticker_bg_0);
+				break;
+			case 1:
+				view.setBackgroundResource(R.drawable.snaprkit_fx_sticker_bg_1);
+				break;
+			case 2:
+				view.setBackgroundResource(R.drawable.snaprkit_fx_sticker_bg_2);
+				break;
+			case 3:
+				view.setBackgroundResource(R.drawable.snaprkit_fx_sticker_bg_3);
+				break;
+			case 4:
+				view.setBackgroundResource(R.drawable.snaprkit_fx_sticker_bg_4);
+				break;
+			}
+
+			image.setOnClickListener(new View.OnClickListener() {
+				@Override public void onClick(View view) {
+					onEffectClick(view);
+				}
+			});
 			
 			image.setOnClickListener(new View.OnClickListener() {
 				@Override public void onClick(View view) {
@@ -509,6 +498,10 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			} else if (stickerPackIndex == STICKER_PACK_3) {
 				mSticker3Container.addView(view);
 			}
+			if(i > 1)
+				((LinearLayout.LayoutParams)view.getLayoutParams()).leftMargin = -150;
+			else
+				((LinearLayout.LayoutParams)view.getLayoutParams()).leftMargin = 50;
 		}
 	}
 
@@ -589,46 +582,6 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		mFilterButton.setSelected(isShowingFilters);
 		mStickerButton.setVisibility(hasStickers && hasFilters? View.VISIBLE : View.GONE);
 		mStickerButton.setSelected(isShowingStickers1);
-		mSticker2Button.setVisibility(hasStickers2 && hasFilters? View.VISIBLE : View.GONE);
-		mSticker2Button.setSelected(isShowingStickers2);
-
-		Log.d("Alecs log", "4: " + System.currentTimeMillis());
-		// update the filter and sticker buttons backgrounds
-		if (numVisibleStickerPacks == 2) {
-			mFilterButton.setBackgroundResource(R.drawable.snaprkitfx_btn_filter);
-			mStickerButton.setBackgroundResource(R.drawable.snaprkitfx_btn_3btn_sticker);
-			mSticker2Button.setBackgroundResource(R.drawable.snaprkitfx_btn_3btn_sticker2);
-		} else if (numVisibleStickerPacks == 1) {
-			mFilterButton.setBackgroundResource(R.drawable.snaprkitfx_btn_filter);
-			mStickerButton.setBackgroundResource(R.drawable.snaprkitfx_btn_sticker);
-		} else if (numVisibleStickerPacks == 3) {
-			mFilterButton.setBackgroundResource(R.drawable.snaprkit_pink_filter);
-			mStickerMenuButton.setVisibility(hasFilters && hasStickers ? View.VISIBLE : View.GONE);
-			inflateStickerMenu();
-			Log.d("Alecs log", "5: " + System.currentTimeMillis());
-			if(mInteractionState == InteractionState.SHOWING_STICKER_MENU) {
-				mStickerMenuButton.setSelected(true);
-				if (mStickerMenu.getVisibility() == View.GONE) {
-					mStickerMenu.setVisibility(View.VISIBLE);
-					mFilterOverlay.startAnimation(mFilterOverlayFadeIn);
-					mFilterOverlay.setVisibility(View.VISIBLE);
-				}
-			} else {
-				if(mInteractionState == InteractionState.SHOWING_STICKERS) {
-					mTabletop.setInteractionEnabled(true);
-					mStickerMenuButton.setSelected(true);
-				} else {
-					mStickerMenuButton.setSelected(false);
-				}
-				if (mStickerMenu.getVisibility() == View.VISIBLE) {
-					mStickerMenu.setVisibility(View.GONE);
-					mFilterOverlay.startAnimation(mFilterOverlayFadeOut);
-				}
-			}
-		}
-		
-		// hide the divider if only one of two buttons is shown
-		mButtonDivider.setVisibility(hasFilters && hasStickers ? View.VISIBLE : View.GONE);
 		
 		// update the locked message
 		Log.d("Alecs log", "6: " + System.currentTimeMillis());
@@ -640,8 +593,6 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		// update the next button
 		Log.d("Alecs log", "8: " + System.currentTimeMillis());
 		boolean isNextButton = hasStickers && hasFilters && isShowingFilters;
-		int resourceId = isNextButton ? R.drawable.snaprkitfx_btn_next : R.drawable.snaprkitfx_btn_tick;
-		mNextButton.setBackgroundResource(resourceId);
 		mNextButton.setEnabled(isNextButton || (!isFilterLocked && !isStickerLocked));
 		Log.d("Alecs log", "9: " + System.currentTimeMillis());
 		
@@ -654,33 +605,6 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		Log.d("Alecs log", "Done update " + System.currentTimeMillis());
 	}
 	
-	/**
-	 * Call this if you want to load three sticker packs, it will properly
-	 * move the buttons into the menu.
-	 */
-	private void inflateStickerMenu() {
-		ViewGroup parent = (ViewGroup)mSticker2Button.getParent();
-		parent.removeView(mStickerButton);
-		parent.removeView(mSticker2Button);
-		parent.removeView(mSticker3Button);
-		mSticker3Button.setVisibility(View.VISIBLE);
-		
-		mStickerMenu.addView(mStickerButton, STICKER_PACK_1);
-		mStickerMenu.addView(mSticker2Button, STICKER_PACK_2);
-		mStickerMenu.addView(mSticker3Button, STICKER_PACK_3);
-		
-		mStickerButton.setBackgroundResource(R.drawable.snaprkit_pink_sticker_top);
-		mSticker2Button.setBackgroundResource(R.drawable.snaprkit_pink_sticker_middle);
-		mSticker3Button.setBackgroundResource(R.drawable.snaprkit_pink_sticker_bottom);
-		
-		((ImageView)mStickerButton).setImageResource(R.drawable.snaprkit_pink_text_pink_school_spirit_selector);
-		((ImageView)mSticker2Button).setImageResource(R.drawable.snaprkit_pink_text_pink_fashion_show_selector);
-		((ImageView)mSticker3Button).setImageResource(R.drawable.snaprkit_pink_text_pink_spring_break_selector);
-	
-		mStickerButton.setPadding(0, getActivity().getResources().getDimensionPixelOffset(R.dimen.pink_sticker_menu_offset), 0, 0);
-		mSticker3Button.setPadding(0, 0, 0, getActivity().getResources().getDimensionPixelOffset(R.dimen.pink_sticker_menu_offset));
-	}
-	
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	 *  update view: effects
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -691,7 +615,6 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			View view = mFilterContainer.findViewWithTag(filter);
 			if (view == null) return;
 			view.setVisibility(filter.getSettings().isVisible() ? View.VISIBLE : View.GONE);
-			view.findViewById(R.id.chosen_imageview).setSelected(filter.equals(mAppliedFilter));
 			view.findViewById(R.id.locked_overlay_imageview).setVisibility(filter.getSettings().isLocked() ? View.VISIBLE : View.INVISIBLE);
 		}
 	}
@@ -796,6 +719,7 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	
 	private void onFilterButtonClick() {
+		customBg.setImageResource(R.drawable.snaprkit_fx_filters_tab_bg);
 		// cancel any pending runnables and run them right away
 		if (isShowingLockMessage()) cancelHideStickerLockMessageRunnable(true);
 		mInteractionState = InteractionState.SHOWING_FILTERS;
@@ -817,6 +741,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 		// if a lock message is showing, are currently selected filter is not available
 		// since we're switching to the stickers here, make sure we reset the active filter to the 'default'
 		if (isShowingLockMessage()) hideFilterLockMessage(true);
+		
+		customBg.setImageResource(R.drawable.snaprkit_fx_stickers_tab_bg);
 		
 		mInteractionState = InteractionState.SHOWING_STICKERS;
 		mCurrentStickerPack = stickerPackIndex;
@@ -1086,6 +1012,8 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 			if (DEBUG) JSATimeUtil.logTime("filter packs inflated");
 			
 			ArrayList<StickerPack> stickerPacks = new ArrayList<StickerPack>();
+			mStickerPackLocations = new ArrayList<String>();
+			mStickerPackLocations.add("sticker_packs/pink");
 			for (String stickerPackLocation:mStickerPackLocations)
 			{
 				StickerPack stickerPack = inflateStickers(stickerPackLocation);
@@ -1271,5 +1199,4 @@ public class SnaprImageEditFragment extends Fragment implements TabletopListener
 	static {
 		System.loadLibrary("snapr-jni");
 	}
-	
 }

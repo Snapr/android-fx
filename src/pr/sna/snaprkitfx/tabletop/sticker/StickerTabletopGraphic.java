@@ -49,7 +49,7 @@ public class StickerTabletopGraphic extends TabletopGraphic {
 
 	@Override public void onDraw(Canvas canvas, DrawContext context) {
 		boolean isBitmapCanvas = canvas instanceof BitmapCanvas;
-		boolean hasBlendMode = mSticker.getBlendingMode() != BlendingMode.NORMAL;
+		boolean hasBlendMode = false;
 		
 		// draw the sticker directly onto the canvas if no blending is required
 		if (!isBitmapCanvas || !hasBlendMode) {
@@ -67,7 +67,7 @@ public class StickerTabletopGraphic extends TabletopGraphic {
 		super.onDraw(transparentCanvas, context);
 		
 		// draw the sticker into the canvas
-		CompositeEffect.applyImageEffect(bitmap, transparentBitmap, 1f, mSticker.getBlendingMode().getCompositeBlendMode());
+		CompositeEffect.applyImageEffect(bitmap, transparentBitmap, 1f, BlendingMode.NORMAL.getCompositeBlendMode());
 		
 		// recycle the transparent bitmap
 		transparentBitmap.recycle();

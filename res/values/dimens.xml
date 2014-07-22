@@ -3,8 +3,8 @@
     <dimen name="message_container_margin">30dp</dimen>
     <dimen name="message_text_padding">20sp</dimen>
     <dimen name="message_text_size">16sp</dimen>
-    <dimen name="thumbnail_size">80dp</dimen>
-    <dimen name="thumbnail_text_size">12sp</dimen>
+    <dimen name="thumbnail_size">44dp</dimen>
+    <dimen name="thumbnail_text_size">8sp</dimen>
     <dimen name="button_divider_width">10dp</dimen>
 
     <dimen name="pink_sticker_menu_offset">8dp</dimen>

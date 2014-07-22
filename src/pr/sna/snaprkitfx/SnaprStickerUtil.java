@@ -44,14 +44,14 @@ public abstract class SnaprStickerUtil {
 		public static StickerPack parse(Context context, String folder, boolean loadImages) throws IOException, JSONException, ParseException {
 			String file = JsonUtil.loadJsonFile(context, folder, "sticker-pack.json");
 			JSONObject json = new JSONObject(file).getJSONObject("sticker_pack");
-			JSONArray stickers = json.getJSONArray("stickers");
+			JSONArray stickers = json.getJSONArray("sections").getJSONObject(0).getJSONArray("stickers");
 			
 			StickerPack pack = new StickerPack();
 			pack.mName = json.getString("name");
 			pack.mSlug = json.getString("slug");
 			// description appears to be optional? only attempt to parse if it's available
 			pack.mDescription = json.has("description") ? json.getString("description") : null;
-			pack.mThumbnail = loadImages ? JsonUtil.loadScaledAssetBitmap(context, folder, "thumb@2x.png", false) : null;
+			pack.mThumbnail = loadImages ? JsonUtil.loadScaledAssetBitmap(context, folder, "thumb.png", false) : null;
 			pack.mStickers = new ArrayList<SnaprStickerUtil.Sticker>();
 			
 			// parse settings, or construct default (everything initialised to 'false' and 'null')
@@ -104,7 +104,7 @@ public abstract class SnaprStickerUtil {
 		
 		public void loadImages(Context context, String folder, OnImageLoadListener listener) throws IOException {
 			if (folder == null) throw new IllegalArgumentException();
-			if (mThumbnail == null) mThumbnail = JsonUtil.loadScaledAssetBitmap(context, folder, "thumb@2x.png");
+			if (mThumbnail == null) mThumbnail = JsonUtil.loadScaledAssetBitmap(context, folder, "thumb.png");
 			if (mThumbnail != null && listener != null) listener.onImageLoad(this, mThumbnail);
 			for (Sticker sticker : mStickers) sticker.loadImages(context, folder, listener);
 		}
@@ -117,8 +117,6 @@ public abstract class SnaprStickerUtil {
 	public static final class Sticker implements GraphicElement {
 		private String mName;
 		private String mSlug;
-		private int mOpacity;
-		private BlendingMode mBlendingMode;
 		private Bitmap mImage;
 		private Bitmap mThumbnail;
 		private long mMaxImageBytes;
@@ -136,10 +134,8 @@ public abstract class SnaprStickerUtil {
 				sticker.mMaxImageBytes = maxImageBytes;
 				sticker.mName = json.getString("name");
 				sticker.mSlug = json.getString("slug");
-				sticker.mOpacity = json.getInt("opacity");
-				sticker.mBlendingMode = BlendingMode.getBlendingMode(json.getString("blending_mode"));
-				sticker.mImage = loadImages ? loadImageBitmap(context, folder, sticker.mSlug, sticker.mMaxImageBytes, sticker.mOpacity, sticker.mBlendingMode) : null;
-				sticker.mThumbnail = loadImages ? JsonUtil.loadScaledAssetBitmap(context, thumbnailFolder, sticker.mSlug + "@2x.png") : null;
+				sticker.mImage = loadImages ? loadImageBitmap(context, folder, sticker.mSlug, sticker.mMaxImageBytes) : null;
+				sticker.mThumbnail = loadImages ? JsonUtil.loadScaledAssetBitmap(context, thumbnailFolder, sticker.mSlug + ".png") : null;
 				
 				// parse settings, or construct default (everything initialised to 'false' and 'null')
 				sticker.mSettings = json.isNull("settings") ? SnaprSetting.getDefaultSettings(stickerSlug) : SnaprSetting.parse(context, json.getJSONObject("settings"), stickerSlug);
@@ -161,14 +157,6 @@ public abstract class SnaprStickerUtil {
 
 		public String getSlug() {
 			return mSlug;
-		}
-		
-		public int getOpacity() {
-			return mOpacity;
-		}
-		
-		public BlendingMode getBlendingMode() {
-			return mBlendingMode;
 		}
 		
 		public Bitmap getImage() {
@@ -199,20 +187,19 @@ public abstract class SnaprStickerUtil {
 			if (context == null || folder == null) throw new IllegalArgumentException();
 			folder = folder + File.separator + "assets";
 			String thumbnailFolder = folder + File.separator + "thumbs";
-			if (mImage == null) mImage = loadImageBitmap(context, folder, mSlug, mMaxImageBytes, mOpacity, mBlendingMode);
+			if (mImage == null) mImage = loadImageBitmap(context, folder, mSlug, mMaxImageBytes);
 			if (mImage != null && listener != null) listener.onImageLoad(this, mThumbnail);
-			if (mThumbnail == null) mThumbnail = JsonUtil.loadScaledAssetBitmap(context, thumbnailFolder, mSlug + "@2x.png");
+			if (mThumbnail == null) mThumbnail = JsonUtil.loadScaledAssetBitmap(context, thumbnailFolder, mSlug + ".png");
 			if (mThumbnail != null && listener != null) listener.onImageLoad(this, mImage);
 		}
 		
-		private static Bitmap loadImageBitmap(Context context, String folder, String slug, long maxImageBytes, int opacity, BlendingMode blendingMode) throws IOException {
+		private static Bitmap loadImageBitmap(Context context, String folder, String slug, long maxImageBytes) throws IOException {
 			Bitmap bitmap = JsonUtil.loadMemoryAwareAssetBitmap(context, folder, slug + ".png", maxImageBytes);
 			Bitmap result = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), bitmap.getConfig());
 			Canvas canvas = new Canvas(result);
 			
 			// draw the opaque bitmap
 			Paint paint = new Paint();
-			paint.setAlpha((int) (opacity / 100f * 255));
 			canvas.drawBitmap(bitmap, 0, 0, paint);
 			bitmap.recycle();
 			System.gc();
